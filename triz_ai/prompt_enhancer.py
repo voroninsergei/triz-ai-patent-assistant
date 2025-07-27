@@ -35,7 +35,7 @@ import os
 import json
 from typing import Dict, Optional
 
-from generate_formula import extract_features
+from .generate_formula import extract_features 
 import re
 
 
