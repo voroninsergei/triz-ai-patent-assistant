@@ -33,6 +33,19 @@ dependencies = [
   "rich>=13.5.2",
 ]
 
+# Explicitly tell setuptools which packages to include when building the Python
+# distribution.  Without this configuration setuptools will inspect every
+# top‑level directory in the repository to decide what constitutes a
+# Python package.  Our repository contains a ``web`` directory with HTML
+# and JavaScript assets for the GitHub Pages site.  When setuptools sees
+# multiple top‑level directories (``triz_ai`` and ``web``) in a flat
+# layout, it refuses to build the package to prevent accidentally
+# including unwanted files.  To avoid the ``Multiple top‑level packages
+# discovered in a flat-layout`` error, we explicitly list only
+# ``triz_ai`` as a Python package.
+[tool.setuptools]
+packages = ["triz_ai"]
+
 [project.urls]
 Homepage        = "https://github.com/voroninsergei/triz-ai-patent-assistant"
 Documentation   = "https://voroninsergei.github.io/triz-ai-patent-assistant/"
