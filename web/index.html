@@ -8,6 +8,13 @@
 <body>
 <h1>TRIZ‑AI Patent Assistant</h1>
 
+<label id="label_language">Язык формулы
+  <select id="language">
+    <option value="ru" selected>русский</option>
+    <option value="en">English</option>
+  </select>
+</label>
+
 <label id="label_title">Название (объект + функция)
   <input id="title" placeholder="Система охлаждения аккумулятора…" />
 </label>
@@ -24,16 +31,6 @@
   <input id="effect" placeholder="поддерживает температуру ячеек 20‑35 °C…" />
 </label>
 
-<!-- Additional options for language, style and variants -->
-<!-- Language selector at the top -->
-<label id="label_language">Язык формулы
-  <select id="language">
-    <option value="ru" selected>русский</option>
-    <!-- Display English name in English for clarity -->
-    <option value="en">English</option>
-  </select>
-</label>
-
 <!-- Additional options for style and variants -->
 <label id="label_style">Стиль формулы
   <select id="style">
@@ -46,7 +43,6 @@
   <input id="variants" type="number" min="2" placeholder="2" />
 </label>
 
-<!-- Generate formula -->
 <button id="btn">Сгенерировать формулу</button>
 
 <pre id="result" class="hidden">
