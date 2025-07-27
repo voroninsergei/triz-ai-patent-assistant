@@ -568,24 +568,58 @@ def generate_formula(
     if variants is None or variants <= 1:
         return wide_formula
 
-    # Otherwise, return list of variants: [wide, narrow] with repeats if needed
-    formulas: _List[str] = [wide_formula, narrow_formula]
+    # Otherwise, return a list of variants.  The first element is always the
+    # wide (deduplicated) formula and the last element is the narrow
+    # (non‑deduplicated) formula.  When more than two variants are
+    # requested, generate additional wide variants by permuting the order of
+    # feature lists.  This simple heuristic rotates the deduplicated
+    # features to produce distinct sentences.  If there are fewer feature
+    # phrases than requested variants, rotations will eventually repeat; we
+    # deduplicate the final list to avoid duplicates.
+    formulas: _List[str] = []
+    # Always include the wide formula first
+    formulas.append(wide_formula)
+    # Generate additional wide formulas when variants > 2
     if variants > 2:
-        # When more than two variants are requested, the heuristic implementation
-        # cannot reliably generate additional distinct claims.  Instead of
-        # returning duplicate wide claims, we simply provide the wide and
-        # narrow versions and ignore the extra count.  If truly distinct
-        # alternatives are desired (e.g. re‑ordering features or using
-        # synonyms), they should be generated upstream.
-        pass  # no additional variants are appended
-    # Remove potential duplicates while preserving order
+        # Split deduplicated features into lists for rotation
+        known_list = _split_features(parts.get("known", ""))
+        distinct_list = _split_features(parts.get("distinctive", ""))
+        # Generate up to (variants - 2) additional variants
+        num_extra = max(0, variants - 2)
+        for i in range(1, num_extra + 1):
+            # Rotate lists by i positions if possible
+            def rotate(seq, n):
+                if not seq:
+                    return seq
+                n = n % len(seq)
+                return seq[n:] + seq[:n]
+            rot_known = rotate(known_list, i)
+            rot_distinct = rotate(distinct_list, i)
+            wide_var = build_formula(
+                parts.get("name", ""),
+                ', '.join(rot_known),
+                ', '.join(rot_distinct),
+                parts.get("effect", ""),
+                language=language,
+            )
+            formulas.append(wide_var)
+    # Append the narrow formula as the last variant
+    formulas.append(narrow_formula)
+    # Remove duplicates while preserving order
     seen: Dict[str, None] = {}
-    unique_formulas = []
+    unique_formulas: _List[str] = []
     for f in formulas:
         if f not in seen:
             seen[f] = None
             unique_formulas.append(f)
-    return unique_formulas
+    # If we have fewer unique formulas than requested variants, pad the list
+    # by repeating the last unique formula.  This ensures the number of
+    # returned items matches the ``variants`` parameter even when the
+    # heuristic cannot produce enough distinct variations.
+    while len(unique_formulas) < variants:
+        unique_formulas.append(unique_formulas[-1])
+    # Trim to exactly the requested number of variants
+    return unique_formulas[:variants]
 
 
 def extract_features(idea: str) -> dict:
