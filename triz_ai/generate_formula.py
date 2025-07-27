@@ -436,90 +436,17 @@ def _generate_formula_original(idea: str) -> str:
     return formula
 
 
-def generate_formula(
-    idea: str,
-    style: Literal["compact", "verbose"] = "compact",
-    variants: int = 1,
-    language: Literal["ru", "en"] = "ru",
-) -> Union[str, _List[str]]:
-    """Generate one or more patent claims from an idea description.
-
-    This function orchestrates a pipeline of parsing, deduplication and
-    assembly of a patent claim.  It supports two output styles:
-
-    * ``"compact"`` (default) – applies deduplication to the list of
-      features, consolidating known traits before the word «включающий» and
-      ensuring that only truly new features follow «отличающийся тем, что».
-      It also guarantees that the phrase «обеспечивает …» appears exactly
-      once at the end of the claim.
-    * ``"verbose"`` – reproduces the behaviour of the original algorithm
-      without deduplication.  This mode is provided for backward
-      compatibility and to ease comparison between versions.
-
-    When ``variants`` is greater than 1 the function returns a list
-    containing a "wide" and a "narrow" version of the claim.  The wide
-    version unites similar features (using the deduplication logic) while
-    the narrow version preserves the original phrasing of the distinctive
-    features.  If more than two variants are requested, the additional
-    entries will repeat the wide version.
-
-    Parameters
-    ----------
-    idea : str
-        Free‑form description of the invention.
-    style : {"compact", "verbose"}, optional
-        Output style.  Defaults to "compact".
-    variants : int, optional
-        Number of claim variants to generate.  If greater than 1, a list
-        of claims is returned.  Defaults to 1.
-    language : {"ru", "en"}, optional
-        Language of the input description.  Currently affects only
-        morphological normalisation.  Defaults to "ru".
-
-    Returns
-    -------
-    Union[str, List[str]]
-        A single claim string when ``variants`` is 1, or a list of claim
-        strings when ``variants`` is greater than 1.
-    """
-    # Start timing for metrics
-    t0 = time.perf_counter()
-    if style.lower() == 'verbose':
-        # In verbose mode simply use the original implementation
-        result = _generate_formula_original(idea)
-        # Log elapsed time
-        logger.debug("generate_formula verbose elapsed %.3f ms", (time.perf_counter() - t0) * 1000.0)
-        if variants <= 1:
-            return result
-        else:
-            # For multiple variants in verbose mode return identical copies
-            return [result for _ in range(max(1, variants))]
-
-    # Parse the description into parts
-    parse_start = time.perf_counter()
-    parts = parse_input(idea, language=language)
-    parse_time = time.perf_counter() - parse_start
-
-    # Deduplicate known and distinctive features
-    dedup_start = time.perf_counter()
-    known_dedup, distinctive_dedup, dup_rate = deduplicate_features(
-        parts.get('known', ''), parts.get('distinctive', ''), language=language
-    )
-    dedup_time = time.perf_counter() - dedup_start
-
-    # Build the wide claim (deduplicated)
-    build_start = time.perf_counter()
-    wide_formula = build_formula(parts.get('name', ''), known_dedup, distinctive_dedup, parts.get('effect', ''), language=language)
-    build_time = time.perf_counter() - build_start
-
-    # Log metrics
-    logger.debug(
-        "generate_formula compact parse=%.3f ms dedup=%.3f ms build=%.3f ms dup_rate=%.1f%%",
-        parse_time * 1000.0,
-        dedup_time * 1000.0,
-        build_time * 1000.0,
-        dup_rate,
-    )
+def generate_formula(title: str,
+                     known: str = "",
+                     distinct: str = "",
+                     effect: str = "",
+                     variants: int | str | None = None) -> str:
+    # 👉 кастуем к int, если это строка
+    if variants is not None:
+        try:
+            variants = int(variants)
+        except ValueError:
+            variants = None          # или 1 – как вам логичнее
 
     if variants is None or variants <= 1:
         # Return a single string for backward compatibility
