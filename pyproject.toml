@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name            = "triz-ai-patent-assistant"
-version         = "0.1.15"
+version         = "0.1.6"
 description     = "AI‑assisted TRIZ patent analysis toolkit"
 readme          = "README.md"          # <‑‑ Появилась эта строка
 requires-python = ">=3.8"

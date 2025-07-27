@@ -24,6 +24,19 @@
   <input id="effect" placeholder="поддерживает температуру ячеек 20‑35 °C…" />
 </label>
 
+<!-- Additional options for style and variants -->
+<label>Стиль формулы
+  <select id="style">
+    <option value="compact" selected>компактный (без повторений)</option>
+    <option value="verbose">подробный (с повторениями)</option>
+  </select>
+</label>
+
+<label>Количество вариантов (оставьте пустым для одного варианта)
+  <input id="variants" type="number" min="2" placeholder="2" />
+</label>
+
+<!-- Generate formula -->
 <button id="btn">Сгенерировать формулу</button>
 
 <pre id="result" class="hidden">
@@ -31,6 +44,56 @@
 
 <strong>Формула:</strong>
 <code id="formula"></code>
+</pre>
+
+<!-- Section for invention analysis -->
+<hr />
+<h2>Анализ изобретения</h2>
+<label>Текст описания изобретения
+  <textarea id="analyze_text" placeholder="Опишите изобретение для анализа…"></textarea>
+</label>
+<label>Макс. количество ключевых слов
+  <input id="max_keywords" type="number" min="1" max="20" placeholder="10" />
+</label>
+<button id="analyze_btn">Анализировать</button>
+
+<pre id="analyze_result" class="hidden">
+<strong>Ключевые слова:</strong> <span id="keywords"></span>
+
+<strong>IPC‑коды:</strong> <span id="ipc_codes"></span>
+
+<strong>TRIZ‑функции:</strong> <span id="triz_functions"></span>
+
+<strong>Противоречия:</strong>
+<ul id="contradictions"></ul>
+</pre>
+
+<!-- Section for formula enhancement -->
+<hr />
+<h2>Улучшение формулы</h2>
+<label>Формула для улучшения
+  <textarea id="enhance_formula" placeholder="Введите формулу для улучшения…"></textarea>
+</label>
+<label>API‑ключ (опционально, для использования LLM)
+  <input id="openai_api_key" type="password" placeholder="sk‑…" />
+</label>
+<label>Провайдер
+  <select id="provider">
+    <option value="openai" selected>OpenAI</option>
+    <option value="azure">Azure</option>
+    <option value="anthropic">Anthropic</option>
+    <option value="mistral">Mistral</option>
+  </select>
+</label>
+<button id="enhance_btn">Улучшить формулу</button>
+
+<pre id="enhance_result" class="hidden">
+<strong>Предлагаемое название:</strong> <span id="enhance_title"></span>
+
+<strong>Неочевидные признаки:</strong> <span id="non_obvious"></span>
+
+<strong>Обоснование патентоспособности:</strong>
+<p id="justification"></p>
 </pre>
 
 <script src="main.js"></script>
