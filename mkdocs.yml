@@ -3,3 +3,5 @@ nav:
   - Home: index.md
 theme:
   name: material
+
+- web/**  # включаем папку в статик Files
