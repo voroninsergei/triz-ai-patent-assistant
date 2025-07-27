@@ -10,22 +10,24 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # Клонируем репозиторий
+      # 1 — клонируем репозиторий
       - uses: actions/checkout@v4
 
-      # Устанавливаем Python 3.11
+      # 2 — ставим Python 3.11
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # Обновляем pip и ставим зависимости проекта
+      # 3 — устанавливаем зависимости и сам проект
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -e .            # устанавливаем сам пакет
-          pip install pytest          # ➜ добавляем pytest
+          pip install -e .          # project in editable mode
+          pip install pytest        # тестовый раннер
 
-      # Запускаем тесты
+      # 4 — запускаем тесты
       - name: Run tests
+        env:
+          PYTHONPATH: ${{ github.workspace }}
         run: pytest -q
