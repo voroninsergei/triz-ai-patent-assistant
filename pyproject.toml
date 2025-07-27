@@ -1,10 +1,14 @@
 [build-system]
-requires = ["setuptools>=61.0", "wheel"]
+# Use setuptools_scm to derive the version from Git tags.  The
+# ``toml`` extra is required to read configuration from this pyproject.
+requires = ["setuptools>=61.0", "wheel", "setuptools_scm[toml]>=6.0"]
 build-backend = "setuptools.build_meta"
 
 [project]
 name            = "triz-ai-patent-assistant"
-version         = "0.1.18"
+# The version is derived automatically from the most recent Git tag using
+# setuptools_scm.  See [tool.setuptools_scm] for configuration.
+dynamic         = ["version"]
 description     = "AI‑assisted TRIZ patent analysis toolkit"
 readme          = "README.md"          # <‑‑ Появилась эта строка
 requires-python = ">=3.8"
@@ -39,3 +43,11 @@ PyPI            = "https://pypi.org/project/triz-ai-patent-assistant/"
 [tool.setuptools.package-data]
 # включает все .md, .txt и .json из пакета
 "triz_ai" = ["*.md", "*.txt", "*.json"]
+
+# Configure setuptools_scm to derive the package version from Git tags.
+# ``version_scheme = "post-release"`` produces versions like ``1.2.3`` for
+# exact tags and ``1.2.3.postN`` for commits after the tag.  ``local_scheme``
+# is disabled to avoid including local identifiers in the version string.
+[tool.setuptools_scm]
+version_scheme = "post-release"
+local_scheme = "no-local-version"
