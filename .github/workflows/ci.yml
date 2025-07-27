@@ -1,21 +1,19 @@
-# .github/workflows/ci.yml
 name: CI + Publish
 
 on:
   push:
-    branches: [main]          # каждое изменение в main
-  pull_request:               # проверяем PR‑ы
-  release:                    # автопаблиш при релизе (GitHub Releases → PyPI + HF)
+    branches: [main]          # каждое изменение в main
+  pull_request:               # проверки для PR‑ов
+  release:                    # автопаблиш при релизе
     types: [published]
 
 permissions:
-  contents: read              # workflow читает репозиторий, но не пишет
+  contents: read              # workflow читает репо, но не пишет
 
+# ──────────────────────────────── tests ────────────────────────────────
 jobs:
-  #‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
   test:
     runs-on: ubuntu-latest
-
     steps:
       - uses: actions/checkout@v4
 
@@ -35,16 +33,15 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: pytest -q
 
-
-  #‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑‑
+# ─────────────────── build → PyPI → Hugging Face ──────────────────────
   build-and-publish:
     needs: test
     runs-on: ubuntu-latest
-    # выполняем при пушах в main или при релизах
+    # запускаем при push в main или при публикации релиза
     if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
 
     env:
-      HF_REPO: voroninsergei/triz-ai-patent-assistant   # ← свой namespace/repo
+      HF_REPO: voroninsergei/triz-ai-patent-assistant   # поменяйте, если нужно
 
     steps:
       - uses: actions/checkout@v4
@@ -53,30 +50,33 @@ jobs:
         with:
           python-version: '3.11'
 
-      - name: Install build / publish tools
+      - name: Install build / publish tools
         run: |
           python -m pip install --upgrade pip
           pip install build twine huggingface_hub
 
       - name: Build distribution
-        run: python -m build        # создает dist/*.whl + .tar.gz
+        run: python -m build          # создаёт dist/*.whl + *.tar.gz
 
-      # ---------- PyPI ----------
-      - name: Publish to PyPI
+      # ────────────── PyPI ──────────────
+      - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: twine upload dist/*
+        run: |
+          # --skip-existing → не падаем, если такой файл уже загружен
+          twine upload --skip-existing dist/*
 
-      # ---------- Hugging Face ----------
+      # ─────────── Hugging Face ─────────
       - name: Login HF CLI
+        if: ${{ secrets.HUGGINGFACE_TOKEN != '' }}
         env:
           HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
         run: echo "${HF_TOKEN}" | huggingface-cli login --token
 
-      - name: Upload to Hugging Face
+      - name: Upload to Hugging Face
+        if: ${{ secrets.HUGGINGFACE_TOKEN != '' }}
         run: |
-          huggingface-cli upload "${HF_REPO}" dist/ \
+          huggingface-cli upload "${HF_REPO}" dist/* \
             --repo-type model \
             --commit-message "🤖 Release ${{ github.ref_name || github.sha }}"
-
