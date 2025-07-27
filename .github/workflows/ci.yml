@@ -13,17 +13,18 @@ jobs:
       # Клонируем репозиторий
       - uses: actions/checkout@v4
 
-      # Ставим Python 3.11
+      # Устанавливаем Python 3.11
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
 
-      # Устанавливаем зависимости + сам проект в editable‑режиме
+      # Обновляем pip и ставим зависимости проекта
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
-          pip install -e .
+          pip install -e .            # устанавливаем сам пакет
+          pip install pytest          # ➜ добавляем pytest
 
       # Запускаем тесты
       - name: Run tests
