@@ -1,5 +1,4 @@
-from prompt_enhancer import enhance_formula
-
+from triz_ai.prompt_enhancer import enhance_formula
 
 def test_enhance_formula_basic():
     formula = "Устройство, включающее насос, отличающийся тем, что дополнительно содержит датчик температуры."
