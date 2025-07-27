@@ -1,0 +1,6 @@
+lines   cov%   module   (path)
+  169   100%   generate_formula   (/home/oai/share/triz_ai_sources_unzipped/generate_formula.py)
+   47   100%   prompt_enhancer   (/home/oai/share/triz_ai_sources_unzipped/prompt_enhancer.py)
+   13   100%   run_tests   (run_tests.py)
+   20   100%   test_generate_formula   (/home/oai/share/triz_ai_sources_unzipped/tests/test_generate_formula.py)
+   15   100%   test_prompt_enhancer   (/home/oai/share/triz_ai_sources_unzipped/tests/test_prompt_enhancer.py)

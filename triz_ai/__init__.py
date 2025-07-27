@@ -1,0 +1,1 @@
+# TRIZ AI package
