@@ -1,15 +1,41 @@
 [build-system]
-requires = ["setuptools>=61.0"]
+requires = ["setuptools>=61.0", "wheel"]
 build-backend = "setuptools.build_meta"
 
 [project]
-name = "triz-ai-patent-assistant"
-version = "0.1.3"
-description = "AI-assisted TRIZ patent analysis toolkit"
-readme = "README.md"
+name            = "triz-ai-patent-assistant"
+version         = "0.1.3"
+description     = "AI‑assisted TRIZ patent analysis toolkit"
+readme          = "README.md"          # <‑‑ Появилась эта строка
 requires-python = ">=3.8"
-license = { text = "MIT" }
-authors = [{ name = "Sergei Voronin"}]
+license         = {text = "MIT"}
+authors         = [
+  { name = "Sergei Voronin", email = "voroninsergeiai@gmail.com" }
+]
+classifiers = [
+  "License :: OSI Approved :: MIT License",
+  "Programming Language :: Python",
+  "Programming Language :: Python :: 3",
+  "Programming Language :: Python :: 3 :: Only",
+  "Programming Language :: Python :: 3.8",
+  "Development Status :: 3 - Alpha",
+  "Intended Audience :: Developers",
+  "Topic :: Scientific/Engineering",
+]
 
-[project.scripts]
-triz-ai = "triz_ai.cli:main"
+dependencies = [
+  "openai>=1.0.0",   # пример
+  "mkdocs>=1.5.3",
+  "rich>=13.5.2",
+]
+
+[project.urls]
+Homepage        = "https://github.com/voroninsergei/triz-ai-patent-assistant"
+Documentation   = "https://voroninsergei.github.io/triz-ai-patent-assistant/"
+Source          = "https://github.com/voroninsergei/triz-ai-patent-assistant"
+Issues          = "https://github.com/voroninsergei/triz-ai-patent-assistant/issues"
+PyPI            = "https://pypi.org/project/triz-ai-patent-assistant/"
+
+[tool.setuptools.package-data]
+# включает все .md, .txt и .json из пакета
+"triz_ai" = ["*.md", "*.txt", "*.json"]
