@@ -1,6 +1,6 @@
 import re
 
-from generate_formula import generate_formula
+from triz_ai.generate_formula import generate_formula
 
 
 def test_generate_formula_short():
