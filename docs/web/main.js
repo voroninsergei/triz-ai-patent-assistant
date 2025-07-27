@@ -1,39 +1,36 @@
-<script>
-/*  URL вашего Space после сборки  */
-const API = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space/formula";
-
-/*  отправляем данные на BE и выводим результат  */
 async function generate() {
-  // читаем поля формы
-  const title        = document.getElementById("title").value.trim();
-  const known        = document.getElementById("known").value.trim();
-  const distinctive  = document.getElementById("distinctive").value.trim();
-  const effect       = document.getElementById("effect").value.trim();
+  const title       = document.getElementById("title").value.trim();
+  const known       = document.getElementById("known").value.trim();
+  const distinctive = document.getElementById("distinctive").value.trim();
+  const effect      = document.getElementById("effect").value.trim();
 
-  if (!title || !effect)
-    return alert("Заполните как минимум Название и Эффект 🙂");
+  if (!title || !known || !distinctive || !effect) {
+    return alert("Заполните все четыре поля 🙏");
+  }
 
-  // POST‑запрос к FastAPI
-  const resp = await fetch(API, {
-    method : "POST",
-    headers: { "Content-Type": "application/json" },
-    body   : JSON.stringify({           // → Idea(BaseModel) в app.py
-      title, known, distinctive, effect
-    })
-  });
+  const payload = {
+    data: [title, known, distinctive, effect]   // порядок важен ↴
+  };
 
-  if (!resp.ok)
-    return alert("Ошибка: " + resp.status);
+  const resp = await fetch(
+    "https://voroninsergei-triz-ai-patent-assistant-api.hf.space/run",
+    {
+      method : "POST",
+      headers: { "Content-Type": "application/json" },
+      body   : JSON.stringify(payload)
+    }
+  );
 
-  const data = await resp.json();
+  if (!resp.ok) return alert("Ошибка: " + resp.status);
 
-  // выводим результат
-  document.getElementById("formula").textContent       = data.formula;
+  const { data } = await resp.json();          // HF Spaces возвращают {data:[…]}
+  const { formula } = data[0];                 // ваша API отдаёт объект с ключом formula
+
+  document.getElementById("formula").textContent = formula;
   document.getElementById("result").classList.remove("hidden");
+  document.getElementById("copy"  ).classList.remove("hidden");
 }
 
-// привязки кнопок
 document.getElementById("btn").onclick  = generate;
 document.getElementById("copy").onclick = () =>
   navigator.clipboard.writeText(document.getElementById("formula").textContent);
-</script>
