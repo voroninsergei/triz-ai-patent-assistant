@@ -441,8 +441,8 @@ def generate_formula(
     known: str = "",
     distinct: str = "",
     effect: str = "",
-    style: Literal["compact", "verbose"] = "compact",
     variants: int | str | None = None,
+    style: Literal["compact", "verbose"] = "compact",
     language: str = "ru",
 ) -> Union[str, _List[str]]:
     """Generate a patent claim from a free‑form description or explicit parts.
@@ -475,10 +475,6 @@ def generate_formula(
     effect : str, optional
         The intended effect of the invention.  If left empty, the description
         is parsed instead.
-    style : {"compact", "verbose"}, optional
-        Determines whether to return a compact claim with duplicate features
-        removed (``"compact"``) or a verbose claim preserving all original
-        features (``"verbose"``).  Defaults to ``"compact"``.
     variants : int or str or None, optional
         Number of claim variants to return.  A value of 1 or ``None``
         produces a single claim.  Values greater than 1 return a list of
@@ -486,6 +482,10 @@ def generate_formula(
         narrow (non‑deduplicated) claim; if more than two variants are
         requested, additional wide claims are appended.  Strings are
         converted to integers where possible.
+    style : {"compact", "verbose"}, optional
+        Determines whether to return a compact claim with duplicate features
+        removed (``"compact"``) or a verbose claim preserving all original
+        features (``"verbose"``).  Defaults to ``"compact"``.
     language : str, optional
         Language code used for stemming and other locale‑sensitive operations.
 
