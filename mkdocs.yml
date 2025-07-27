@@ -1,0 +1,5 @@
+site_name: TRIZ‑AI Patent Assistant
+nav:
+  - Home: index.md
+theme:
+  name: material
