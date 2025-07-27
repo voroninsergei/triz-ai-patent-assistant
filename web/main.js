@@ -12,7 +12,7 @@ const translations = {
     label_known: "Известные признаки",
     label_distinct: "Отличительные признаки",
     label_effect: "Эффект (технический результат)",
-    label_language: "Язык формулы",
+    label_language: "Язык формулы (Formula language)",
     label_style: "Стиль формулы",
     label_variants: "Количество вариантов (оставьте пустым для одного варианта)",
     btn_generate: "Сгенерировать формулу",
