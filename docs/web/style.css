@@ -1,46 +1,115 @@
-body {
-  max-width: 900px;
-  margin: 2rem auto;
-  font-family: system-ui, sans-serif;
+/* ---------- базовая палитра GitHub light */
+:root {
+  --gh-fg            : #24292f;   /* основной текст */
+  --gh-fg-muted      : #57606a;
+  --gh-border        : #d0d7de;
+  --gh-bg            : #ffffff;
+  --gh-btn-bg        : #f6f8fa;
+  --gh-btn-border    : #d0d7de;
+  --gh-btn-hover-bg  : #f3f4f6;
+  --gh-focus-ring    : #0969da;
+  --gh-accent        : #0969da;
+  --gh-shadow-sm     : rgba(140,149,159,.15);
 }
 
-h1 { font-size: 2.5rem; margin-bottom: 2rem; }
-
-label {
-  display: block;
-  margin-bottom: 1.2rem;
+html,body{
+  margin:0;
+  padding:0;
+  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif,
+              "Apple Color Emoji","Segoe UI Emoji"; /* как на GitHub */
+  color:var(--gh-fg);
+  background:var(--gh-bg);
 }
 
-label span {
-  display: block;
+/* ---------- контейнер */
+body{
+  max-width: 920px;
+  margin: 40px auto 80px;
+  padding: 0 24px;
+}
+
+/* ---------- заголовок */
+h1{
+  font-size:32px;
+  line-height: 1.25;
   font-weight: 600;
-  margin-bottom: 0.4rem;
+  margin: 0 0 32px;
 }
 
-input, textarea {
-  width: 100%;
-  font: inherit;
-  padding: 0.6rem;
-  border: 1px solid #888;
-  border-radius: 4px;
+/* ---------- подписи к полям */
+label span{
+  display:block;
+  font-size:14px;
+  font-weight: 600;
+  margin-bottom:6px;
+  color:var(--gh-fg);
 }
 
-button {
-  margin-top: 1rem;
-  padding: 0.7rem 1.4rem;
-  font-size: 1rem;
-  border: 1px solid #444;
-  border-radius: 4px;
-  cursor: pointer;
+/* ---------- поля ввода */
+input,textarea{
+  width:100%;
+  font: 14px/20px inherit;
+  color: var(--gh-fg);
+  background: var(--gh-bg);
+  border: 1px solid var(--gh-border);
+  border-radius: 6px;
+  padding: 8px 12px;
+  outline: none;
+  transition: border-color .12s ease-in-out, box-shadow .12s;
 }
 
-#copy.hidden,
-#result.hidden { display: none; }
-
-pre {
-  background: #f8f8f8;
-  padding: 1rem;
-  border-radius: 4px;
-  white-space: pre-wrap;
-  margin-top: 1.5rem;
+input:focus, textarea:focus{
+  border-color: var(--gh-focus-ring);
+  box-shadow: 0 0 0 3px rgba(9,105,218,.3);
 }
+
+textarea{ resize: vertical; min-height: 70px; }
+
+label{ display:block; margin-bottom:20px; }
+
+/* ---------- кнопки */
+button{
+  display:inline-block;
+  cursor:pointer;
+  font-size:14px;
+  font-weight:600;
+  line-height:20px;
+  color:var(--gh-fg);
+  background-color:var(--gh-btn-bg);
+  border:1px solid var(--gh-btn-border);
+  padding:6px 16px;
+  border-radius:6px;
+  box-shadow:0 1px 0 var(--gh-shadow-sm);
+  transition: background-color .12s ease-in-out;
+}
+
+button:hover:not(:disabled){
+  background-color:var(--gh-btn-hover-bg);
+}
+
+button:active:not(:disabled){
+  background-color:#ebedef;
+  box-shadow:none;
+}
+
+button:focus-visible{
+  outline:none;
+  border-color:var(--gh-focus-ring);
+  box-shadow:0 0 0 3px rgba(9,105,218,.3);
+}
+
+button.hidden{ display:none; }
+
+/* ---------- результат */
+pre{
+  background: #f6f8fa;
+  border: 1px solid var(--gh-border);
+  border-radius:6px;
+  padding:16px;
+  margin-top:24px;
+  overflow-x:auto;
+  font-size:13px;
+  line-height:1.5;
+}
+
+#result.hidden{ display:none; }
