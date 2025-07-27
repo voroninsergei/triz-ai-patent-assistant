@@ -11,13 +11,14 @@ async function generate() {
   const effect   = document.getElementById("effect").value.trim();
   const style    = document.getElementById("style").value;
   const variants = document.getElementById("variants").value;
+  const language = document.getElementById("language").value;
 
   if (!title || !effect) {
     alert("Заполните как минимум «Название» и «Эффект»");
     return;
   }
   // Build request body with optional variants
-  const payload = { title, known, distinct, effect, style };
+  const payload = { title, known, distinct, effect, style, language };
   if (variants) payload.variants = Number(variants);
 
   const resp = await fetch(API_FORMULA, {
@@ -69,11 +70,17 @@ async function analyze() {
   document.getElementById("triz_functions").textContent = (result.triz_functions || []).join(", ");
   const contradictionsList = document.getElementById("contradictions");
   contradictionsList.innerHTML = "";
-  (result.contradictions || []).forEach((c) => {
+  if (result.contradictions && result.contradictions.length) {
+    (result.contradictions || []).forEach((c) => {
+      const li = document.createElement("li");
+      li.textContent = c.description || c;
+      contradictionsList.appendChild(li);
+    });
+  } else {
     const li = document.createElement("li");
-    li.textContent = c.description || c;
+    li.textContent = "Противоречия не обнаружены";
     contradictionsList.appendChild(li);
-  });
+  }
   document.getElementById("analyze_result").classList.remove("hidden");
 }
 

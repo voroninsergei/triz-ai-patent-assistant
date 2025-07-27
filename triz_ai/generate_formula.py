@@ -571,8 +571,21 @@ def generate_formula(
     # Otherwise, return list of variants: [wide, narrow] with repeats if needed
     formulas: _List[str] = [wide_formula, narrow_formula]
     if variants > 2:
-        formulas.extend([wide_formula] * (variants - 2))
-    return formulas
+        # When more than two variants are requested, the heuristic implementation
+        # cannot reliably generate additional distinct claims.  Instead of
+        # returning duplicate wide claims, we simply provide the wide and
+        # narrow versions and ignore the extra count.  If truly distinct
+        # alternatives are desired (e.g. re‑ordering features or using
+        # synonyms), they should be generated upstream.
+        pass  # no additional variants are appended
+    # Remove potential duplicates while preserving order
+    seen: Dict[str, None] = {}
+    unique_formulas = []
+    for f in formulas:
+        if f not in seen:
+            seen[f] = None
+            unique_formulas.append(f)
+    return unique_formulas
 
 
 def extract_features(idea: str) -> dict:
