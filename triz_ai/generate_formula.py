@@ -654,47 +654,62 @@ def generate_formula(
         # In verbose mode deduplication is not performed; use original
         known_list = _split_features(parts.get("known", ""))
         distinct_list = _split_features(parts.get("distinctive", ""))
-    # Helper to rotate a list by n positions
-    def rotate(seq, n):
-        if not seq:
-            return seq
-        n = n % len(seq)
-        return seq[n:] + seq[:n]
+    # To generate multiple distinct variants, we enumerate permutations of
+    # the feature lists.  Permutations provide a richer set of orderings
+    # than simple rotations and ensure that requesting many variants
+    # produces varied output.  We compute all permutations of the known
+    # features and all permutations of the distinctive features, then
+    # combine them pairwise.  If the number of requested variants exceeds
+    # the number of unique permutations, we cycle through the list.
+    import itertools
+    # Generate unique permutations for known and distinctive lists.  If a
+    # list contains duplicate elements, using set() on permutations would
+    # drop duplicates, but itertools.permutations already handles
+    # duplicates implicitly by producing positional permutations.  To
+    # maintain deterministic ordering we sort the lists beforehand.
+    known_perms = list(itertools.permutations(known_list)) or [()]
+    distinct_perms = list(itertools.permutations(distinct_list)) or [()]
     formulas: _List[str] = []
-    for i in range(variants):
-        # Rotate known and distinctive lists to generate variation
-        rot_known = rotate(known_list, i)
-        rot_distinct = rotate(distinct_list, i)
-        # Apply synonym substitution to the first word of each phrase to
-        # introduce additional diversity across variants.  The variant index
-        # (i+1) is 1‑based.
-        syn_known = [
-            _replace_first_word_with_synonym(p, i + 1, language)
-            for p in rot_known
-        ]
-        syn_distinct = [
-            _replace_first_word_with_synonym(p, i + 1, language)
-            for p in rot_distinct
-        ]
-        formula = build_formula(
-            parts.get("name", ""),
-            ', '.join(syn_known),
-            ', '.join(syn_distinct),
-            parts.get("effect", ""),
-            language=language,
-        )
-        formulas.append(formula)
-    # Remove duplicates while preserving order
-    seen: Dict[str, None] = {}
-    unique_formulas: _List[str] = []
-    for f in formulas:
-        if f not in seen:
-            seen[f] = None
-            unique_formulas.append(f)
-    # If not enough unique formulas, repeat the last one to reach desired count
-    while len(unique_formulas) < variants:
-        unique_formulas.append(unique_formulas[-1])
-    return unique_formulas[:variants]
+    # We iterate over the product of both permutation lists and build
+    # formulas until we reach the requested number of variants.
+    variant_idx = 1
+    for kp in known_perms:
+        for dp in distinct_perms:
+            if len(formulas) >= variants:
+                break
+            # Convert tuples back to comma‑separated strings
+            rot_known = list(kp)
+            rot_distinct = list(dp)
+            # Apply synonym substitution to the first word of each phrase
+            syn_known = [
+                _replace_first_word_with_synonym(p, variant_idx, language)
+                for p in rot_known
+            ]
+            syn_distinct = [
+                _replace_first_word_with_synonym(p, variant_idx, language)
+                for p in rot_distinct
+            ]
+            formula = build_formula(
+                parts.get("name", ""),
+                ', '.join(syn_known),
+                ', '.join(syn_distinct),
+                parts.get("effect", ""),
+                language=language,
+            )
+            formulas.append(formula)
+            variant_idx += 1
+        if len(formulas) >= variants:
+            break
+    # If we did not generate enough unique variants (which can happen if
+    # there are fewer unique permutations than requested), we repeat
+    # formulas from the beginning to pad the list.  This mirrors the
+    # previous behaviour of duplicating the last formula but produces a
+    # predictable cycling through the generated variants.
+    if len(formulas) < variants:
+        cycle_iter = itertools.cycle(formulas)
+        while len(formulas) < variants:
+            formulas.append(next(cycle_iter))
+    return formulas[:variants]
 
 
 def extract_features(idea: str) -> dict:
