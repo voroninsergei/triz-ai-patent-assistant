@@ -436,139 +436,31 @@ def _generate_formula_original(idea: str) -> str:
     return formula
 
 
-def generate_formula(
-    title: str,
-    known: str = "",
-    distinct: str = "",
-    effect: str = "",
-    variants: int | str | None = None,
-    style: Literal["compact", "verbose"] = "compact",
-    language: str = "ru",
-) -> Union[str, _List[str]]:
-    """Generate a patent claim from a free‑form description or explicit parts.
-
-    The function can operate in two modes:
-
-    1. **Free‑form description:** When only the first positional argument is
-       provided (and ``known``, ``distinct`` and ``effect`` are left at their
-       defaults), the argument is treated as a complete description of the
-       invention.  The description is parsed into its structural parts using
-       :func:`parse_input`.
-
-    2. **Explicit parts:** When ``known``, ``distinct`` or ``effect`` are
-       explicitly passed, the first argument is interpreted as the title of
-       the invention and the remaining strings supply the known features,
-       distinctive features and intended effect directly.
-
-    Parameters
-    ----------
-    title : str
-        Either the full description of the invention (when the other parts
-        are empty) or the title of the invention when explicit parts are
-        provided.
-    known : str, optional
-        Comma‑separated known features.  If left empty, the description
-        is parsed instead.
-    distinct : str, optional
-        Comma‑separated distinctive features.  If left empty, the description
-        is parsed instead.
-    effect : str, optional
-        The intended effect of the invention.  If left empty, the description
-        is parsed instead.
-    variants : int or str or None, optional
-        Number of claim variants to return.  A value of 1 or ``None``
-        produces a single claim.  Values greater than 1 return a list of
-        claims starting with the wide (deduplicated) claim followed by the
-        narrow (non‑deduplicated) claim; if more than two variants are
-        requested, additional wide claims are appended.  Strings are
-        converted to integers where possible.
-    style : {"compact", "verbose"}, optional
-        Determines whether to return a compact claim with duplicate features
-        removed (``"compact"``) or a verbose claim preserving all original
-        features (``"verbose"``).  Defaults to ``"compact"``.
-    language : str, optional
-        Language code used for stemming and other locale‑sensitive operations.
-
-    Returns
-    -------
-    str or list of str
-        Either a single claim or a list of claims depending on ``variants``.
-    """
-    # Normalise variants parameter: cast to int where possible
+def generate_formula(title: str,
+                     known: str = "",
+                     distinct: str = "",
+                     effect: str = "",
+                     variants: int | str | None = None) -> str:
+    # 👉 кастуем к int, если это строка
     if variants is not None:
         try:
             variants = int(variants)
-        except (ValueError, TypeError):
-            variants = None
+        except ValueError:
+            variants = None          # или 1 – как вам логичнее
 
-    # Determine whether we are operating on a free‑form description or explicit parts
-    if known or distinct or effect:
-        # Explicit parts provided: use them directly
-        parts: Dict[str, str] = {
-            "name": (title or "").strip(),
-            "known": (known or "").strip(),
-            "distinctive": (distinct or "").strip(),
-            "effect": (effect or "").strip(),
-        }
-    else:
-        # Only the first argument is provided: treat as complete description
-        idea = title or ""
-        parts = parse_input(idea, language=language)
-
-    # Choose style of formula generation
-    style_lc = (style or "").lower()
-    if style_lc not in {"compact", "verbose"}:
-        # Fall back to compact if unknown style
-        style_lc = "compact"
-
-    # For verbose style we replicate the original behaviour: no deduplication
-    if style_lc == "verbose":
-        # Construct the claim using the original logic.  If we were given
-        # explicit parts, build the claim directly; otherwise call the
-        # monolithic implementation on the original description.
-        if known or distinct or effect:
-            wide_formula = build_formula(
-                parts.get("name", ""),
-                parts.get("known", ""),
-                parts.get("distinctive", ""),
-                parts.get("effect", ""),
-                language=language,
-            )
-        else:
-            # For free‑form input we preserve the full description
-            wide_formula = _generate_formula_original(title)
-        narrow_formula = wide_formula  # In verbose mode wide and narrow coincide
-    else:
-        # Compact style: deduplicate features to produce a wide claim and
-        # optionally a narrow claim with original features
-        # Deduplicate known and distinctive features
-        known_dedup, distinct_dedup, _dup_rate = deduplicate_features(
-            parts.get("known", ""),
-            parts.get("distinctive", ""),
-            language=language,
-        )
-        # Wide claim: deduplicated features
-        wide_formula = build_formula(
-            parts.get("name", ""),
-            known_dedup,
-            distinct_dedup,
-            parts.get("effect", ""),
-            language=language,
-        )
-        # Narrow claim: original features without deduplication
-        narrow_formula = build_formula(
-            parts.get("name", ""),
-            parts.get("known", ""),
-            parts.get("distinctive", ""),
-            parts.get("effect", ""),
-            language=language,
-        )
-
-    # If variants is None or <=1, return a single formula (wide claim)
     if variants is None or variants <= 1:
+        # Return a single string for backward compatibility
         return wide_formula
 
-    # Otherwise, return list of variants: [wide, narrow] with repeats if needed
+    # Build the narrow claim using original features without deduplication
+    narrow_formula = build_formula(
+        parts.get('name', ''),
+        parts.get('known', ''),
+        parts.get('distinctive', ''),
+        parts.get('effect', ''),
+        language=language,
+    )
+    # Compose the list of variants: first wide, then narrow, then repeat wide if more requested
     formulas: _List[str] = [wide_formula, narrow_formula]
     if variants > 2:
         formulas.extend([wide_formula] * (variants - 2))

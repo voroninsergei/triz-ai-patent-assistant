@@ -1,1 +1,6 @@
+# Project dependencies.  Do not specify the package itself here;
+# the local ``triz_ai`` package is used directly from the repository.
+fastapi
+pydantic
+uvicorn
 nltk
