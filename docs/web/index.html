@@ -1,35 +1,38 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>TRIZ‑AI Patent Assistant</title>
-
-  <!-- GitHub‑like минималистичный стиль -->
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8" />
+<title>TRIZ‑AI Patent Assistant</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>TRIZ‑AI Patent Assistant</h1>
+<h1>TRIZ‑AI Patent Assistant</h1>
 
-  <label for="title">Название (объект + функция)</label>
-  <textarea id="title"   placeholder="Система охлаждения аккумулятора электромобиля"></textarea>
+<label>Название (объект + функция)
+  <input id="title" placeholder="Система охлаждения аккумулятора…" />
+</label>
 
-  <label for="known">Известные признаки</label>
-  <textarea id="known"  placeholder="радиатор, электрический вентилятор"></textarea>
+<label>Известные признаки
+  <textarea id="known" placeholder="радиатор, электрический вентилятор"></textarea>
+</label>
 
-  <label for="distinct">Отличительные признаки</label>
-  <textarea id="distinct" placeholder="тепловые трубки, контроллер, регулирующий поток хладагента…"></textarea>
+<label>Отличительные признаки
+  <textarea id="distinct" placeholder="тепловые трубки, контроллер…"></textarea>
+</label>
 
-  <label for="effect">Эффект (технический результат)</label>
-  <textarea id="effect" placeholder="поддерживает температуру ячеек 20‑35 °C при быстрой зарядке"></textarea>
+<label>Эффект (технический результат)
+  <input id="effect" placeholder="поддерживает температуру ячеек 20‑35 °C…" />
+</label>
 
-  <button id="btn">Сгенерировать формулу</button>
+<button id="btn">Сгенерировать формулу</button>
 
-  <section id="result" class="hidden">
-    <h2>Результат</h2>
-    <pre><code id="formula"></code></pre>
-    <button id="copy">📋 Скопировать</button>
-  </section>
+<pre id="result" class="hidden">
+<strong>Название:</strong> <span id="f_title"></span>
 
-  <script src="main.js"></script>
+<strong>Формула:</strong>
+<code id="formula"></code>
+</pre>
+
+<script src="main.js"></script>
 </body>
 </html>
