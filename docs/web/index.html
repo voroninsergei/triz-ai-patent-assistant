@@ -8,24 +8,25 @@
 <body>
 <h1>TRIZ‑AI Patent Assistant</h1>
 
-<label>Название (объект + функция)
+<label id="label_title">Название (объект + функция)
   <input id="title" placeholder="Система охлаждения аккумулятора…" />
 </label>
 
-<label>Известные признаки
+<label id="label_known">Известные признаки
   <textarea id="known" placeholder="радиатор, электрический вентилятор"></textarea>
 </label>
 
-<label>Отличительные признаки
+<label id="label_distinct">Отличительные признаки
   <textarea id="distinct" placeholder="тепловые трубки, контроллер…"></textarea>
 </label>
 
-<label>Эффект (технический результат)
+<label id="label_effect">Эффект (технический результат)
   <input id="effect" placeholder="поддерживает температуру ячеек 20‑35 °C…" />
 </label>
 
 <!-- Additional options for language, style and variants -->
-<label>Язык формулы
+<!-- Language selector at the top -->
+<label id="label_language">Язык формулы
   <select id="language">
     <option value="ru" selected>русский</option>
     <option value="en">английский</option>
@@ -33,14 +34,14 @@
 </label>
 
 <!-- Additional options for style and variants -->
-<label>Стиль формулы
+<label id="label_style">Стиль формулы
   <select id="style">
     <option value="compact" selected>компактный (без повторений)</option>
     <option value="verbose">подробный (с повторениями)</option>
   </select>
 </label>
 
-<label>Количество вариантов (оставьте пустым для одного варианта)
+<label id="label_variants">Количество вариантов (оставьте пустым для одного варианта)
   <input id="variants" type="number" min="2" placeholder="2" />
 </label>
 
@@ -57,10 +58,10 @@
 <!-- Section for invention analysis -->
 <hr />
 <h2>Анализ изобретения</h2>
-<label>Текст описания изобретения
+<label id="label_analyze_text">Текст описания изобретения
   <textarea id="analyze_text" placeholder="Опишите изобретение для анализа…"></textarea>
 </label>
-<label>Макс. количество ключевых слов
+<label id="label_max_keywords">Макс. количество ключевых слов
   <input id="max_keywords" type="number" min="1" max="20" placeholder="10" />
 </label>
 <button id="analyze_btn">Анализировать</button>
@@ -79,13 +80,13 @@
 <!-- Section for formula enhancement -->
 <hr />
 <h2>Улучшение формулы</h2>
-<label>Формула для улучшения
+<label id="label_enhance_formula">Формула для улучшения
   <textarea id="enhance_formula" placeholder="Введите формулу для улучшения…"></textarea>
 </label>
-<label>API‑ключ (опционально, для использования LLM)
+<label id="label_api_key">API‑ключ (опционально, для использования LLM)
   <input id="openai_api_key" type="password" placeholder="sk‑…" />
 </label>
-<label>Провайдер
+<label id="label_provider">Провайдер
   <select id="provider">
     <option value="openai" selected>OpenAI</option>
     <option value="azure">Azure</option>
