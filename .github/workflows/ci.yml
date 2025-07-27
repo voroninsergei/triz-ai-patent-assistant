@@ -2,15 +2,15 @@ name: CI + Publish
 
 on:
   push:
-    branches: [main]          # любые коммиты в main
-  pull_request:               # проверки для PR‑ов
-  release:                    # автопаблиш, когда создают релиз
+    branches: [main]           # коммиты в main
+  pull_request:                # проверки для PR
+  release:                     # автопубликация при релизе
     types: [published]
 
 permissions:
-  contents: read              # workflow читает репозиторий
+  contents: read               # workflow только читает репо
 
-# ────────────────────────── ТЕСТЫ ──────────────────────────
+# ─────────────── ТЕСТЫ ───────────────
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -34,17 +34,15 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: pytest -q
 
-# ──────── сборка → PyPI → Hugging Face ────────
+# ────── Build → PyPI → Hugging Face ──────
   build-and-publish:
     needs: test
     runs-on: ubuntu-latest
-    # запускаем при push и при релизе
     if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
 
-    # подтягиваем токен в окружение, чтобы проверять через env.*
     env:
-      HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
-      HF_REPO:  voroninsergei/triz-ai-patent-assistant   # измените при необходимости
+      HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}          # задаётся в Settings → Secrets → Actions
+      HF_REPO:  voroninsergei/triz-ai-patent-assistant    # поменяйте при необходимости
 
     steps:
       - uses: actions/checkout@v4
@@ -56,13 +54,12 @@ jobs:
       - name: Install build / publish tools
         run: |
           python -m pip install --upgrade pip
-          # CLI входит в extra‑доп зависимости
           pip install build twine "huggingface_hub[cli]"
 
       - name: Build distribution
-        run: python -m build                 # создаёт dist/*.whl и .tar.gz
+        run: python -m build               # dist/*.whl и .tar.gz
 
-      # ────────── PyPI ──────────
+      # ───────── PyPI ─────────
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
@@ -70,14 +67,15 @@ jobs:
         run: |
           twine upload --skip-existing dist/*
 
-      # ─── Hugging Face (только если токен задан) ───
+      # ─── Hugging Face (выполняется, только если токен задан) ───
       - name: Login HF CLI
         if: ${{ env.HF_TOKEN != '' }}
-        run: echo "${HF_TOKEN}" | huggingface-cli login --token
+        run: |
+          huggingface-cli login --token "$HF_TOKEN" --add-to-git-credential
 
       - name: Upload to Hugging Face
         if: ${{ env.HF_TOKEN != '' }}
         run: |
-          huggingface-cli upload "${HF_REPO}" dist/* \
+          huggingface-cli upload "$HF_REPO" dist/* \
             --repo-type model \
             --commit-message "🤖 Release ${{ github.ref_name || github.sha }}"
