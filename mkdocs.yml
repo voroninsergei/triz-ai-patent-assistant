@@ -1,7 +1,31 @@
 site_name: TRIZ‑AI Patent Assistant
-nav:
-  - Home: index.md
+site_description: AI + TRIZ system for patent formula generation
+site_url: https://voroninsergei.github.io/triz-ai-patent-assistant/
+
 theme:
   name: material
+  language: ru
+  features:
+    - navigation.tabs
+    - navigation.top
+    - search.highlight
+    - content.code.copy
 
-- web/**  # включаем папку в статик Files
+# где лежат исходные MD‑файлы
+docs_dir: docs
+
+# меню (опционально, по мере роста документации)
+nav:
+  - Главная: index.md
+  - API:
+      - triz_ai.generate_formula: reference/generate_formula.md
+      - triz_ai.prompt_enhancer: reference/prompt_enhancer.md
+
+markdown_extensions:
+  - toc:
+      permalink: true
+  - admonition
+  - tables
+  - footnotes
+  - pymdownx.highlight
+  - pymdownx.superfences
