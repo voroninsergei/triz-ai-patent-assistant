@@ -441,7 +441,7 @@ def generate_formula(
     known: str = "",
     distinct: str = "",
     effect: str = "",
-    variants: int | str | None = None,
+    variants: Union[int, str, None] = None,
     style: Literal["compact", "verbose"] = "compact",
     language: str = "ru",
 ) -> Union[str, _List[str]]:
