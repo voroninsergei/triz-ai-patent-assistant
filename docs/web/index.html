@@ -1,31 +1,46 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <title>TRIZ‑AI Patent Assistant</title>
-  <link rel="stylesheet" href="style.css" />
+  <meta charset="utf-8" />
+  <title>TRIZ‑AI Patent Assistant</title>
+  <!-- минимальный CSS, чтобы выглядело прилично -->
+  <style>
+    *{box-sizing:border-box;font-family:system-ui,Arial,sans-serif}
+    body{max-width:960px;margin:40px auto;padding:0 16px}
+    h1{font-size:2.8rem;margin-bottom:24px}
+    label{display:block;margin:12px 0 6px;font-weight:600}
+    input[type=text],textarea{
+      width:100%;padding:10px 14px;border:1px solid #999;border-radius:4px;
+      font-size:1.05rem
+    }
+    textarea{resize:vertical;min-height:70px}
+    button{
+      margin-top:18px;padding:12px 24px;font-size:1.1rem;font-weight:600;
+      border:1px solid #555;border-radius:6px;background:#eee;cursor:pointer
+    }
+    button:hover{background:#ddd}
+    #result{white-space:pre-wrap;background:#f7f7f7;border:1px dashed #aaa;
+      padding:14px;border-radius:4px;margin-top:24px}
+    .error{color:#d02a00;font-weight:600;margin-top:8px}
+  </style>
 </head>
 <body>
-  <h1>TRIZ‑AI Patent Assistant</h1>
 
-  <textarea id="idea" placeholder="Опишите идею устройства…"></textarea>
-  <button id="btn">Сгенерировать формулу</button>
+<h1>TRIZ‑AI Patent Assistant</h1>
 
-  <!-- Выход -->
-  <section id="result" class="hidden">
-    <h2>Патентная формула</h2>
-    <pre id="formula"></pre>
+<label for="title">Название (объект + функция)</label>
+<input  id="title" type="text" placeholder="Система охлаждения аккумулятора электромобиля">
 
-    <details>
-      <summary>Обоснование + неочевидные предложения</summary>
-      <h3 id="title"></h3>
-      <p id="suggestions"></p>
-      <p id="justification"></p>
-    </details>
+<label for="known">Известные признаки</label>
+<textarea id="known" placeholder="радиатор&#10;электрический вентилятор"></textarea>
 
-    <button id="copy">Скопировать</button>
-  </section>
+<label for="distinct">Отличительные признаки</label>
+<textarea id="distinct" placeholder="тепловые трубки&#10;контроллер, регулирующий поток хладагента"></textarea>
 
-  <script src="main.js"></script>
-</body>
-</html>
+<label for="effect">Эффект (технический результат)</label>
+<input id="effect" type="text" placeholder="поддерживает температуру ячеек 20‑35 °C при быстрой зарядке">
+
+<button id="btn">Сгенерировать формулу</button>
+<div class="error" id="err"></div>
+
+<h2 id="h2re
