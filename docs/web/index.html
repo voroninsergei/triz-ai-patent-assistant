@@ -1,47 +1,35 @@
 <!DOCTYPE html>
 <html lang="ru">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width,initial-scale=1">
+  <meta charset="UTF-8" />
   <title>TRIZ‑AI Patent Assistant</title>
 
-  <!-- ▸ базовая стилизация страницы -->
-  <link rel="stylesheet" href="style.css">
+  <!-- GitHub‑like минималистичный стиль -->
+  <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>TRIZ‑AI Patent Assistant</h1>
+  <h1>TRIZ‑AI Patent Assistant</h1>
 
-  <!-- 🔸 ЧЕТЫРЕ ПОЛЯ ДЛЯ ВВОДА -->
-  <label>
-    <span>Название (объект + функция)</span>
-    <input id="title" placeholder="Система охлаждения аккумулятора электромобиля">
-  </label>
+  <label for="title">Название (объект + функция)</label>
+  <textarea id="title"   placeholder="Система охлаждения аккумулятора электромобиля"></textarea>
 
-  <label>
-    <span>Известные признаки</span>
-    <textarea id="known" rows="2" placeholder="радиатор, электрический вентилятор"></textarea>
-  </label>
+  <label for="known">Известные признаки</label>
+  <textarea id="known"  placeholder="радиатор, электрический вентилятор"></textarea>
 
-  <label>
-    <span>Отличительные признаки</span>
-    <textarea id="distinctive" rows="2"
-              placeholder="тепловые трубки, контроллер, регулирующий поток хладагента…"></textarea>
-  </label>
+  <label for="distinct">Отличительные признаки</label>
+  <textarea id="distinct" placeholder="тепловые трубки, контроллер, регулирующий поток хладагента…"></textarea>
 
-  <label>
-    <span>Эффект (технический результат)</span>
-    <textarea id="effect" rows="2"
-              placeholder="поддерживает температуру ячеек 20‑35 °C при быстрой зарядке"></textarea>
-  </label>
+  <label for="effect">Эффект (технический результат)</label>
+  <textarea id="effect" placeholder="поддерживает температуру ячеек 20‑35 °C при быстрой зарядке"></textarea>
 
-  <!-- КНОПКИ -->
   <button id="btn">Сгенерировать формулу</button>
-  <button id="copy" class="hidden">Скопировать</button>
 
-  <!-- Результат -->
-  <pre id="result" class="hidden"><code id="formula"></code></pre>
+  <section id="result" class="hidden">
+    <h2>Результат</h2>
+    <pre><code id="formula"></code></pre>
+    <button id="copy">📋 Скопировать</button>
+  </section>
 
-  <!-- ▸ логика страницы -->
   <script src="main.js"></script>
 </body>
 </html>
