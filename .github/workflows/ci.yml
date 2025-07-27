@@ -1,79 +1,70 @@
 name: CI + Publish
 
 on:
-  # ── проверяем тесты на каждый push / pull‑request ──────────────
   push:
-    branches: [main]
+    branches: [ main ]
   pull_request:
-  # ── собираем и публикуем пакеты, когда релиз‑тег помечен Published
-  release:
-    types: [published]
+
+permissions:
+  contents: read
 
 jobs:
-# ────────────────────────────────────────────────────────────────
   test:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+    # 1. клонируем
+    - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    # 2. ставим Python 3.11
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Install deps
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r requirements.txt
-          pip install -e .
-          pip install pytest
+    # 3. зависимости + editable‑установка проекта
+    - name: Install deps
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        pip install -e .
+        pip install pytest
 
-      - name: Run tests
-        env:
-          PYTHONPATH: ${{ github.workspace }}
-        run: pytest -q
+    # 4. PyTest
+    - name: Run tests
+      run: pytest -q
 
-# ────────────────────────────────────────────────────────────────
   build-and-publish:
-    if: github.event_name == 'release' && github.event.action == 'published'
     needs: test
     runs-on: ubuntu-latest
-    environment: pypi        # разрешает использовать PYPI_TOKEN
-
     steps:
-      - uses: actions/checkout@v4
+    - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
-        with:
-          python-version: '3.11'
+    - uses: actions/setup-python@v5
+      with:
+        python-version: "3.11"
 
-      - name: Install publisher tooling
-        run: |
-          python -m pip install --upgrade build twine huggingface_hub
+    # сборка дистрибутива
+    - run: |
+        python -m pip install --upgrade build twine
+        python -m build
 
-      - name: Build dists
-        run: python -m build
+    # публикация на PyPI
+    - name: Publish to PyPI
+      env:
+        TWINE_USERNAME: __token__
+        TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
+      run: |
+        twine upload dist/*
 
-      # =====  Upload на PyPI  =====
-      - name: Publish to PyPI
-        env:
-          TWINE_USERNAME: __token__
-          TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
-        run: twine upload dist/*
+    # авторизация в Hugging Face
+    - name: Login HF CLI
+      env:
+        HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+      run: echo "${HF_TOKEN}" | huggingface-cli login --token
 
-      # =====  Авторизация HF CLI и заливка  =====
-      - name: Login Hugging Face CLI
-        if: ${{ secrets.HUGGINGFACE_TOKEN != '' }}
-        env:
-          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
-        run: |
-          echo "${HF_TOKEN}" | huggingface-cli login --token
-
-      - name: Upload to Hugging Face Hub
-        if: ${{ secrets.HUGGINGFACE_TOKEN != '' }}
-        run: |
-          # пример: закачиваем весь dist/ в репозиторий типа `username/project`
-          # repo должен уже существовать или будет создан автоматически
-          huggingface-cli upload \
-            voroninsergei/triz-ai-patent-assistant dist/ --repo-type=model \
-            --commit-message "🤖 v${{ github.ref_name }} auto‑publish"
-
+    # заливка артефактов в HF‑Hub
+    - name: Upload to Hugging Face
+      run: |
+        Repo="voroninsergei/triz-ai-patent-assistant"
+        huggingface-cli upload "${Repo}" dist/ \
+          --repo-type model \
+          --commit-message "🤖 Release ${{ github.ref_name }}"
