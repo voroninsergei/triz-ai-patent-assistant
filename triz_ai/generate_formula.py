@@ -568,43 +568,47 @@ def generate_formula(
     if variants is None or variants <= 1:
         return wide_formula
 
-    # Otherwise, return a list of variants.  The first element is always the
-    # wide (deduplicated) formula and the last element is the narrow
-    # (non‑deduplicated) formula.  When more than two variants are
-    # requested, generate additional wide variants by permuting the order of
-    # feature lists.  This simple heuristic rotates the deduplicated
-    # features to produce distinct sentences.  If there are fewer feature
-    # phrases than requested variants, rotations will eventually repeat; we
-    # deduplicate the final list to avoid duplicates.
-    formulas: _List[str] = []
-    # Always include the wide formula first
-    formulas.append(wide_formula)
-    # Generate additional wide formulas when variants > 2
-    if variants > 2:
-        # Split deduplicated features into lists for rotation
+    # Otherwise, return a list of variants.  For compact style we try to
+    # produce distinct formulas by reordering the deduplicated feature
+    # lists.  If there are no duplicates to remove (i.e., the wide and
+    # narrow formula coincide), rotating the feature order introduces
+    # variation.  We do not include the non‑deduplicated (narrow) claim
+    # separately when ``style='compact'`` because it would be identical in
+    # many cases.  For verbose style, the wide and narrow variants are
+    # identical and thus rotations would be ineffective; in that case we
+    # simply return the single formula repeated.
+
+    # Split deduplicated features into lists for rotation.  For verbose
+    # style these lists are derived from the original parts.
+    if style_lc == "compact":
         known_list = _split_features(parts.get("known", ""))
         distinct_list = _split_features(parts.get("distinctive", ""))
-        # Generate up to (variants - 2) additional variants
-        num_extra = max(0, variants - 2)
-        for i in range(1, num_extra + 1):
-            # Rotate lists by i positions if possible
-            def rotate(seq, n):
-                if not seq:
-                    return seq
-                n = n % len(seq)
-                return seq[n:] + seq[:n]
-            rot_known = rotate(known_list, i)
-            rot_distinct = rotate(distinct_list, i)
-            wide_var = build_formula(
-                parts.get("name", ""),
-                ', '.join(rot_known),
-                ', '.join(rot_distinct),
-                parts.get("effect", ""),
-                language=language,
-            )
-            formulas.append(wide_var)
-    # Append the narrow formula as the last variant
-    formulas.append(narrow_formula)
+    else:
+        # In verbose mode deduplication is not performed; use original
+        known_list = _split_features(parts.get("known", ""))
+        distinct_list = _split_features(parts.get("distinctive", ""))
+    # Helper to rotate a list by n positions
+    def rotate(seq, n):
+        if not seq:
+            return seq
+        n = n % len(seq)
+        return seq[n:] + seq[:n]
+    formulas: _List[str] = []
+    for i in range(variants):
+        # Rotate known and distinctive lists to generate variation
+        rot_known = rotate(known_list, i)
+        rot_distinct = rotate(distinct_list, i)
+        # For compact style we use deduplicated feature strings to build the formula
+        # and always include the effect.  For verbose, deduplication is not
+        # applied but rotation still reorders features.
+        formula = build_formula(
+            parts.get("name", ""),
+            ', '.join(rot_known),
+            ', '.join(rot_distinct),
+            parts.get("effect", ""),
+            language=language,
+        )
+        formulas.append(formula)
     # Remove duplicates while preserving order
     seen: Dict[str, None] = {}
     unique_formulas: _List[str] = []
@@ -612,13 +616,9 @@ def generate_formula(
         if f not in seen:
             seen[f] = None
             unique_formulas.append(f)
-    # If we have fewer unique formulas than requested variants, pad the list
-    # by repeating the last unique formula.  This ensures the number of
-    # returned items matches the ``variants`` parameter even when the
-    # heuristic cannot produce enough distinct variations.
+    # If not enough unique formulas, repeat the last one to reach desired count
     while len(unique_formulas) < variants:
         unique_formulas.append(unique_formulas[-1])
-    # Trim to exactly the requested number of variants
     return unique_formulas[:variants]
 
 
