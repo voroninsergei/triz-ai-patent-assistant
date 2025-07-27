@@ -1,19 +1,18 @@
 async function generate() {
-  const title       = document.getElementById("title").value.trim();
-  const known       = document.getElementById("known").value.trim();
-  const distinctive = document.getElementById("distinctive").value.trim();
-  const effect      = document.getElementById("effect").value.trim();
+  const title     = document.getElementById("title").value.trim();
+  const known     = document.getElementById("known").value.trim();
+  const distinct  = document.getElementById("distinct").value.trim();
+  const effect    = document.getElementById("effect").value.trim();
 
-  if (!title || !known || !distinctive || !effect) {
-    return alert("Заполните все четыре поля 🙏");
+  if (!title || !effect) {
+    return alert("Поля «Название» и «Эффект» обязательны.");
   }
 
-  const payload = {
-    data: [title, known, distinctive, effect]   // порядок важен ↴
-  };
+  const payload = { title, known, distinct, effect };
 
+  // 👉 адрес вашего FastAPI бэкенда на Spaces
   const resp = await fetch(
-    "https://voroninsergei-triz-ai-patent-assistant-api.hf.space/run",
+    "https://voroninsergei-triz-ai-patent-assistant-api.hf.space/formula",
     {
       method : "POST",
       headers: { "Content-Type": "application/json" },
@@ -21,14 +20,13 @@ async function generate() {
     }
   );
 
-  if (!resp.ok) return alert("Ошибка: " + resp.status);
+  if (!resp.ok) {
+    return alert("Ошибка " + resp.status);
+  }
 
-  const { data } = await resp.json();          // HF Spaces возвращают {data:[…]}
-  const { formula } = data[0];                 // ваша API отдаёт объект с ключом formula
-
-  document.getElementById("formula").textContent = formula;
+  const data = await resp.json();        // {formula: "..."}
+  document.getElementById("formula").textContent = data.formula;
   document.getElementById("result").classList.remove("hidden");
-  document.getElementById("copy"  ).classList.remove("hidden");
 }
 
 document.getElementById("btn").onclick  = generate;
