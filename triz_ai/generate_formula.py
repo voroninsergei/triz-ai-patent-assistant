@@ -125,6 +125,73 @@ from typing import Dict, Tuple, Union, Literal, List as _List, Optional as _Opti
 
 logger = logging.getLogger(__name__)
 
+# -----------------------------------------------------------------------------
+# Optional synonym support
+#
+# To generate additional linguistic diversity in claim variants, we attempt to
+# import resources for Russian and English synonyms.  The ``ru_synonyms``
+# package provides a graph of Russian synonyms, while English synonyms are
+# obtained from WordNet via NLTK.  These imports are optional: if the
+# dependencies are not available at runtime, synonym substitution simply
+# falls back to returning the original phrase.
+try:
+    from ru_synonyms.synonyms import SynonymsGraph  # type: ignore
+    _RU_SYNGRAPH = SynonymsGraph()
+except Exception:
+    _RU_SYNGRAPH = None  # type: ignore
+try:
+    from nltk.corpus import wordnet  # type: ignore
+except Exception:
+    wordnet = None  # type: ignore
+
+def _replace_first_word_with_synonym(phrase: str, variant_index: int, lang: str) -> str:
+    """Replace the first word of ``phrase`` with a synonym when possible.
+
+    Parameters
+    ----------
+    phrase:
+        The feature phrase to modify.
+    variant_index:
+        A 1‑based index of the variant being generated.  Used to cycle
+        through available synonyms so that different variants use different
+        substitutes.
+    lang:
+        Language code (``"ru"`` or ``"en"``) selecting the synonym source.
+
+    Returns
+    -------
+    str
+        The modified phrase if a synonym is available; otherwise the
+        original phrase.
+    """
+    words = phrase.split()
+    if not words:
+        return phrase
+    original = words[0]
+    syns: _List[str] = []
+    if lang == 'ru' and _RU_SYNGRAPH:
+        try:
+            syns = list(_RU_SYNGRAPH.get_synonyms(original))
+        except Exception:
+            syns = []
+    elif lang == 'en' and wordnet is not None:
+        try:
+            for syn in wordnet.synsets(original):
+                for lemma in syn.lemmas():
+                    name = lemma.name().replace('_', ' ')
+                    if name.lower() != original.lower():
+                        syns.append(name)
+        except Exception:
+            syns = []
+    # Remove duplicates and sort for deterministic ordering
+    syns = sorted(set(syns), key=str.lower)
+    if syns:
+        # Pick a synonym based on the variant index (cycle if necessary)
+        idx = (variant_index - 1) % len(syns)
+        words[0] = syns[idx]
+        return ' '.join(words)
+    return phrase
+
 
 def parse_input(idea: str, language: str = "ru") -> Dict[str, str]:
     """Parse a free‑form description into its structural parts.
@@ -598,13 +665,21 @@ def generate_formula(
         # Rotate known and distinctive lists to generate variation
         rot_known = rotate(known_list, i)
         rot_distinct = rotate(distinct_list, i)
-        # For compact style we use deduplicated feature strings to build the formula
-        # and always include the effect.  For verbose, deduplication is not
-        # applied but rotation still reorders features.
+        # Apply synonym substitution to the first word of each phrase to
+        # introduce additional diversity across variants.  The variant index
+        # (i+1) is 1‑based.
+        syn_known = [
+            _replace_first_word_with_synonym(p, i + 1, language)
+            for p in rot_known
+        ]
+        syn_distinct = [
+            _replace_first_word_with_synonym(p, i + 1, language)
+            for p in rot_distinct
+        ]
         formula = build_formula(
             parts.get("name", ""),
-            ', '.join(rot_known),
-            ', '.join(rot_distinct),
+            ', '.join(syn_known),
+            ', '.join(syn_distinct),
             parts.get("effect", ""),
             language=language,
         )
