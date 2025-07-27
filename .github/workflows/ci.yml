@@ -2,26 +2,27 @@ name: CI + Publish
 
 on:
   push:
-    branches: [main]          # каждое изменение в main
+    branches: [main]          # любые коммиты в main
   pull_request:               # проверки для PR‑ов
-  release:                    # автопаблиш при релизе
+  release:                    # автопаблиш, когда создают релиз
     types: [published]
 
 permissions:
-  contents: read              # workflow читает репо, но не пишет
+  contents: read              # workflow читает репозиторий
 
-# ──────────────────────────────── tests ────────────────────────────────
+# ────────────────────────── ТЕСТЫ ──────────────────────────
 jobs:
   test:
     runs-on: ubuntu-latest
+
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: Install deps & project
+      - name: Install deps + project
         run: |
           python -m pip install --upgrade pip
           pip install -r requirements.txt
@@ -33,49 +34,49 @@ jobs:
           PYTHONPATH: ${{ github.workspace }}
         run: pytest -q
 
-# ─────────────────── build → PyPI → Hugging Face ──────────────────────
+# ──────── сборка → PyPI → Hugging Face ────────
   build-and-publish:
     needs: test
     runs-on: ubuntu-latest
-    # запускаем при push в main или при публикации релиза
+    # запускаем при push и при релизе
     if: ${{ github.event_name == 'push' || github.event_name == 'release' }}
 
+    # подтягиваем токен в окружение, чтобы проверять через env.*
     env:
-      HF_REPO: voroninsergei/triz-ai-patent-assistant   # поменяйте, если нужно
+      HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+      HF_REPO:  voroninsergei/triz-ai-patent-assistant   # измените при необходимости
 
     steps:
       - uses: actions/checkout@v4
 
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: "3.11"
 
-      - name: Install build / publish tools
+      - name: Install build / publish tools
         run: |
           python -m pip install --upgrade pip
-          pip install build twine huggingface_hub
+          # CLI входит в extra‑доп зависимости
+          pip install build twine "huggingface_hub[cli]"
 
       - name: Build distribution
-        run: python -m build          # создаёт dist/*.whl + *.tar.gz
+        run: python -m build                 # создаёт dist/*.whl и .tar.gz
 
-      # ────────────── PyPI ──────────────
+      # ────────── PyPI ──────────
       - name: Publish to PyPI
         env:
           TWINE_USERNAME: __token__
           TWINE_PASSWORD: ${{ secrets.PYPI_TOKEN }}
         run: |
-          # --skip-existing → не падаем, если такой файл уже загружен
           twine upload --skip-existing dist/*
 
-      # ─────────── Hugging Face ─────────
+      # ─── Hugging Face (только если токен задан) ───
       - name: Login HF CLI
-        if: ${{ secrets.HUGGINGFACE_TOKEN != '' }}
-        env:
-          HF_TOKEN: ${{ secrets.HUGGINGFACE_TOKEN }}
+        if: ${{ env.HF_TOKEN != '' }}
         run: echo "${HF_TOKEN}" | huggingface-cli login --token
 
       - name: Upload to Hugging Face
-        if: ${{ secrets.HUGGINGFACE_TOKEN != '' }}
+        if: ${{ env.HF_TOKEN != '' }}
         run: |
           huggingface-cli upload "${HF_REPO}" dist/* \
             --repo-type model \
