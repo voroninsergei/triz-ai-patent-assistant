@@ -17,13 +17,16 @@ async function generate() {
     body: JSON.stringify({ title, known, distinct, effect }),
   });
 
-  if (!resp.ok) return alert(`Ошибка API: ${resp.status}`);
+  if (!resp.ok) {
+    alert(`Ошибка API: ${resp.status}`);
+    return;
+  }
 
   const { formula } = await resp.json();
-
-  document.getElementById("f_title").textContent = title;
   document.getElementById("formula").textContent = formula;
   document.getElementById("result").classList.remove("hidden");
 }
 
-document.getElementById("btn").onclick = generate;
+document.getElementById("btn").onclick  = generate;
+document.getElementById("copy").onclick = () =>
+  navigator.clipboard.writeText(document.getElementById("formula").textContent);
