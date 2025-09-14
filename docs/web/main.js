@@ -38,8 +38,6 @@ const translations = {
     error_fill_required: "Заполните как минимум «Название» и «Эффект»",
     error_enter_description: "Введите описание изобретения для анализа",
     error_enter_formula: "Введите формулу для улучшения",
-    style_compact: "компактный (без повторений)",
-    style_detailed: "подробный (с повторениями)",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -73,8 +71,6 @@ const translations = {
     error_fill_required: "Please fill in at least the \"Name\" and \"Effect\" fields",
     error_enter_description: "Enter the invention description for analysis",
     error_enter_formula: "Enter a formula for enhancement",
-    style_compact: "compact (no repetition)",
-    style_detailed: "detailed (with repetition)",
   },
 };
 
@@ -108,13 +104,8 @@ function updateLanguageUI() {
   document.getElementById("analyze_text").placeholder = lang === "en" ? "Describe the invention for analysis…" : "Опишите изобретение для анализа…";
   document.getElementById("enhance_formula").placeholder = lang === "en" ? "Enter the formula for enhancement…" : "Введите формулу для улучшения…";
   document.getElementById("openai_api_key").placeholder = lang === "en" ? "sk‑…" : "sk‑…";
-  // NEW: Update style select option texts
-  const styleSel = document.getElementById("style");
-  if (styleSel && styleSel.options.length >= 2) {
-    styleSel.options[0].text = t.style_compact;
-    styleSel.options[1].text = t.style_detailed;
-  }
-  // Update result labels
+
+  // Update result section labels (Название, Формула)
   const resultPre = document.getElementById("result");
   if (resultPre) {
     const resultStrong = resultPre.querySelectorAll("strong");
@@ -123,7 +114,7 @@ function updateLanguageUI() {
       resultStrong[1].textContent = t.field_formula + ":";
     }
   }
-  // Update analysis labels
+  // Update analysis section labels
   const analyzePre = document.getElementById("analyze_result");
   if (analyzePre) {
     const analyzeLabels = analyzePre.querySelectorAll("strong");
@@ -134,7 +125,7 @@ function updateLanguageUI() {
       analyzeLabels[3].textContent = t.field_contradictions + ":";
     }
   }
-  // Update enhancement labels
+  // Update enhancement section labels
   const enhancePre = document.getElementById("enhance_result");
   if (enhancePre) {
     const enhanceLabels = enhancePre.querySelectorAll("strong");
@@ -148,6 +139,7 @@ function updateLanguageUI() {
 
 // Update UI on language change
 document.getElementById("language").addEventListener("change", updateLanguageUI);
+
 
 async function generate() {
   const title    = document.getElementById("title").value.trim();
@@ -197,10 +189,10 @@ async function analyze() {
   const maxKwInput  = document.getElementById("max_keywords").value;
   const max_keywords = maxKwInput ? Number(maxKwInput) : undefined;
   if (!text) {
-     const lang = document.getElementById("language").value;
-     const t = translations[lang] || translations.ru;
-     alert(t.error_enter_description);
-     return;
+    const lang = document.getElementById("language").value;
+    const t = translations[lang] || translations.ru;
+    alert(t.error_enter_description);
+    return;
   }
   const payload = { text };
   if (max_keywords) payload.max_keywords = max_keywords;
