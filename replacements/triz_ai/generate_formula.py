@@ -2,29 +2,31 @@
 import re
 from typing import Dict, List as _List
 
+def _norm_lang(language: str) -> str:
+    s = (language or "ru").strip().lower()
+    # Robust normalization
+    if s in {"en", "eng", "english", "en-us", "en_uk", "en-gb", "en-gb"}:
+        return "en"
+    return "ru"
+
 def _clean_text(s: str) -> str:
     return (s or "").replace("\r", "").strip()
 
 def _extract_section(text: str, labels: _List[str]) -> str:
-    # Finds "Label: ..." or "# Label" sections; case-insensitive
+    # Finds "Label: ..." sections; case-insensitive
     pattern = r"(?im)^(?:{labels})\s*[:：]\s*(.+?)(?=\n[A-Za-zА-Яа-яЁё# ]+[:：]|\Z)"
     re_pat = pattern.format(labels="|".join([re.escape(l) for l in labels]))
     m = re.search(re_pat, text)
-    if m:
-        return m.group(1).strip()
-    return ""
+    return m.group(1).strip() if m else ""
 
 def _collect_sentences(text: str, markers: _List[str]) -> str:
     parts = re.split(r"(?<=[\.\!\?])\s+", text)
-    selected = []
-    for sent in parts:
-        if any(re.search(rf"{re.escape(m)}", sent, re.IGNORECASE) for m in markers):
-            selected.append(sent.strip())
+    selected = [sent.strip() for sent in parts if any(re.search(rf"{re.escape(m)}", sent, re.IGNORECASE) for m in markers)]
     return " ".join(selected).strip()
 
 def parse_input(idea: str, language: str = "ru") -> Dict[str, str]:
     clean_text = _clean_text(idea)
-    lang = (language or "ru").lower()
+    lang = _norm_lang(language)
     if lang == "en":
         name = _extract_section(clean_text, ['title', 'name'])
         known = _extract_section(clean_text, ['known features', 'known', 'prior art', 'existing'])
@@ -37,28 +39,20 @@ def parse_input(idea: str, language: str = "ru") -> Dict[str, str]:
         effect = _extract_section(clean_text, ['эффект', 'результат', 'икр', 'идеальный конечный результат'])
 
     if not known:
-        known = _collect_sentences(
-            clean_text, (['known', 'prior art', 'existing'] if lang == 'en' else ['известн', 'прототип', 'существующ'])
-        )
+        known = _collect_sentences(clean_text, (['known', 'prior art', 'existing'] if lang == 'en' else ['известн', 'прототип', 'существующ']))
     if not distinctive:
-        distinctive = _collect_sentences(
-            clean_text, (['novel', 'distinctive', 'characteris', 'wherein', 'propos'] if lang == 'en' else ['нов', 'отлич', 'предлагаем', 'характериз'])
-        )
+        distinctive = _collect_sentences(clean_text, (['novel', 'distinctive', 'characteris', 'wherein', 'propos'] if lang == 'en' else ['нов', 'отлич', 'предлагаем', 'характериз']))
     if not effect:
-        effect = _collect_sentences(
-            clean_text, (['effect', 'result', 'advantage', 'provides', 'whereby'] if lang == 'en' else ['эффект', 'результат', 'обеспеч', 'позволя'])
-        )
-    return {"name": name, "known": known, "distinctive": distinctive, "effect": effect}
+        effect = _collect_sentences(clean_text, (['effect', 'result', 'advantage', 'provides', 'whereby'] if lang == 'en' else ['эффект', 'результат', 'обеспеч', 'позволя']))
+    return {"name": name, "known": known, "distinctive": distinctive, "effect": effect, "lang": lang}
 
 def _split_features(features: str) -> _List[str]:
     features = (features or "").strip()
     if not features:
         return []
-    # Normalise conjunctions to commas (RU + EN)
+    # RU + EN conjunctions
     normalised = re.sub(r"\s+(и|или|а также|and|or|as well as)\s+", ", ", features, flags=re.IGNORECASE)
-    # Split by commas/semicolons/newlines
     chunks = re.split(r"[,\n;]+", normalised)
-    # Strip leading noisy verbs / helpers
     verbs = {
         # RU
         'содержит', 'содержат', 'имеет', 'имеют', 'включает', 'включают',
@@ -79,20 +73,18 @@ def _split_features(features: str) -> _List[str]:
         tok = re.sub(r"^\b(" + "|".join(sorted(verbs)) + r")\b\s*", "", tok, flags=re.IGNORECASE)
         if tok:
             cleaned.append(tok)
-    # De-duplicate preserving order
-    seen = set()
-    out = []
+    # de-dup
+    seen = set(); out = []
     for x in cleaned:
         k = x.lower()
         if k not in seen:
-            out.append(x)
-            seen.add(k)
+            out.append(x); seen.add(k)
     return out
 
 def build_formula(name: str, known: str, distinctive: str, effect: str, language: str = "ru") -> str:
     parts: _List[str] = []
     name_clean = (name or '').strip().rstrip('.')
-    lang = (language or "ru").lower()
+    lang = _norm_lang(language)
     if lang == "en":
         if name_clean and known:
             parts.append(f"{name_clean}, comprising {known}")
@@ -128,10 +120,10 @@ def build_formula(name: str, known: str, distinctive: str, effect: str, language
 
 def generate_formula(idea: str, language: str = "ru") -> str:
     data = parse_input(idea, language=language)
-    # Split known/distinctive into bullet-like phrases then join with commas
     known_parts = _split_features(data.get("known", ""))
     distinctive_parts = _split_features(data.get("distinctive", ""))
     effect = (data.get("effect") or "").strip()
     known_str = ", ".join(known_parts)
     distinctive_str = ", ".join(distinctive_parts)
-    return build_formula(data.get("name", ""), known_str, distinctive_str, effect, language=language)
+    return build_formula(data.get("name", ""), known_str, distinctive_str, effect, language=data.get("lang", language))
+
