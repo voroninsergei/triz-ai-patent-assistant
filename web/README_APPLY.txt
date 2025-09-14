@@ -1,0 +1,1 @@
+Copy main.js to your repo at web/main.js if you keep a dev copy

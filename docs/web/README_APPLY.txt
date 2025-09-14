@@ -1,0 +1,1 @@
+Copy main.js to your repo at docs/web/main.js (GitHub Pages uses docs/)

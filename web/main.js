@@ -1,10 +1,10 @@
-// Base URL of the API.  If deployed on HuggingFace, adjust accordingly.
+// Base URL of the API. If deployed on HuggingFace, adjust accordingly.
 const API_BASE = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
 const API_FORMULA = `${API_BASE}/formula`;
 const API_ANALYZE = `${API_BASE}/analyze`;
 const API_ENHANCE = `${API_BASE}/enhance`;
 
-// Translation strings for UI.  Russian (ru) and English (en)
+// Translation strings for UI. Russian (ru) and English (en)
 const translations = {
   ru: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -12,7 +12,7 @@ const translations = {
     label_known: "Известные признаки",
     label_distinct: "Отличительные признаки",
     label_effect: "Эффект (технический результат)",
-    label_language: "Язык формулы (Formula language)",
+    label_language: "Язык формулы",
     label_style: "Стиль формулы",
     label_variants: "Количество вариантов (оставьте пустым для одного варианта)",
     btn_generate: "Сгенерировать формулу",
@@ -26,6 +26,20 @@ const translations = {
     label_provider: "Провайдер",
     btn_enhance: "Улучшить формулу",
     no_contradictions: "Противоречия не обнаружены",
+    field_title: "Название",
+    field_formula: "Формула",
+    field_keywords: "Ключевые слова",
+    field_ipc: "IPC‑коды",
+    field_triz: "TRIZ‑функции",
+    field_contradictions: "Противоречия",
+    field_proposed_title: "Предлагаемое название",
+    field_non_obvious: "Неочевидные признаки",
+    field_justification: "Обоснование патентоспособности",
+    error_fill_required: "Заполните как минимум «Название» и «Эффект»",
+    error_enter_description: "Введите описание изобретения для анализа",
+    error_enter_formula: "Введите формулу для улучшения",
+    style_compact: "компактный (без повторений)",
+    style_detailed: "подробный (с повторениями)",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -47,6 +61,20 @@ const translations = {
     label_provider: "Provider",
     btn_enhance: "Enhance formula",
     no_contradictions: "No contradictions found",
+    field_title: "Name",
+    field_formula: "Formula",
+    field_keywords: "Keywords",
+    field_ipc: "IPC codes",
+    field_triz: "TRIZ functions",
+    field_contradictions: "Contradictions",
+    field_proposed_title: "Proposed title",
+    field_non_obvious: "Non‑obvious features",
+    field_justification: "Patentability justification",
+    error_fill_required: "Please fill in at least the "Name" and "Effect" fields",
+    error_enter_description: "Enter the invention description for analysis",
+    error_enter_formula: "Enter a formula for enhancement",
+    style_compact: "compact (no repetition)",
+    style_detailed: "detailed (with repetition)",
   },
 };
 
@@ -72,14 +100,48 @@ function updateLanguageUI() {
   document.getElementById("label_api_key").childNodes[0].nodeValue = t.label_api_key + "\n";
   document.getElementById("label_provider").childNodes[0].nodeValue = t.label_provider + "\n";
   document.getElementById("enhance_btn").textContent = t.btn_enhance;
-  // Update placeholder texts
+  // Update placeholders
   document.getElementById("title").placeholder = lang === "en" ? "Cooling system for an electric car battery" : "Система охлаждения аккумулятора…";
   document.getElementById("known").placeholder = lang === "en" ? "radiator, electric fan" : "радиатор, электрический вентилятор";
   document.getElementById("distinct").placeholder = lang === "en" ? "heat pipes, controller regulating coolant flow…" : "тепловые трубки, контроллер…";
   document.getElementById("effect").placeholder = lang === "en" ? "maintains cell temperature at 20‑35 °C during fast charging" : "поддерживает температуру ячеек 20‑35 °C…";
   document.getElementById("analyze_text").placeholder = lang === "en" ? "Describe the invention for analysis…" : "Опишите изобретение для анализа…";
   document.getElementById("enhance_formula").placeholder = lang === "en" ? "Enter the formula for enhancement…" : "Введите формулу для улучшения…";
-  document.getElementById("openai_api_key").placeholder = lang === "en" ? "sk‑…" : "sk‑…";
+  document.getElementById("openai_api_key").placeholder = "sk‑…";
+  // Update result/analysis/enhancement section labels
+  const resultPre = document.getElementById("result");
+  if (resultPre) {
+    const resultStrong = resultPre.querySelectorAll("strong");
+    if (resultStrong && resultStrong.length >= 2) {
+      resultStrong[0].textContent = t.field_title + ":";
+      resultStrong[1].textContent = t.field_formula + ":";
+    }
+  }
+  const analyzePre = document.getElementById("analyze_result");
+  if (analyzePre) {
+    const analyzeLabels = analyzePre.querySelectorAll("strong");
+    if (analyzeLabels && analyzeLabels.length >= 4) {
+      analyzeLabels[0].textContent = t.field_keywords + ":";
+      analyzeLabels[1].textContent = t.field_ipc + ":";
+      analyzeLabels[2].textContent = t.field_triz + ":";
+      analyzeLabels[3].textContent = t.field_contradictions + ":";
+    }
+  }
+  const enhancePre = document.getElementById("enhance_result");
+  if (enhancePre) {
+    const enhanceLabels = enhancePre.querySelectorAll("strong");
+    if (enhanceLabels && enhanceLabels.length >= 3) {
+      enhanceLabels[0].textContent = t.field_proposed_title + ":";
+      enhanceLabels[1].textContent = t.field_non_obvious + ":";
+      enhanceLabels[2].textContent = t.field_justification + ":";
+    }
+  }
+  // Update style options text
+  const styleSel = document.getElementById("style");
+  if (styleSel && styleSel.options.length >= 2) {
+    styleSel.options[0].text = t.style_compact;
+    styleSel.options[1].text = t.style_detailed;
+  }
 }
 
 // Update UI on language change
@@ -95,10 +157,10 @@ async function generate() {
   const language = document.getElementById("language").value;
 
   if (!title || !effect) {
-    alert("Заполните как минимум «Название» и «Эффект»");
+    const t = translations[language] || translations.ru;
+    alert(t.error_fill_required);
     return;
   }
-  // Build request body with optional variants
   const payload = { title, known, distinct, effect, style, language };
   if (variants) payload.variants = Number(variants);
 
@@ -116,7 +178,6 @@ async function generate() {
   const data = await resp.json();
   const formula = data.formula;
   const formulaEl = document.getElementById("formula");
-  // If multiple variants returned, join them with line breaks
   if (Array.isArray(formula)) {
     formulaEl.textContent = formula.join("\n\n");
   } else {
@@ -130,8 +191,10 @@ async function analyze() {
   const text        = document.getElementById("analyze_text").value.trim();
   const maxKwInput  = document.getElementById("max_keywords").value;
   const max_keywords = maxKwInput ? Number(maxKwInput) : undefined;
+  const language = document.getElementById("language").value;
+  const t = translations[language] || translations.ru;
   if (!text) {
-    alert("Введите описание изобретения для анализа");
+    alert(t.error_enter_description);
     return;
   }
   const payload = { text };
@@ -159,8 +222,7 @@ async function analyze() {
     });
   } else {
     const li = document.createElement("li");
-    const lang = document.getElementById("language").value;
-    li.textContent = translations[lang].no_contradictions;
+    li.textContent = t.no_contradictions;
     contradictionsList.appendChild(li);
   }
   document.getElementById("analyze_result").classList.remove("hidden");
@@ -170,8 +232,10 @@ async function enhance() {
   const formula = document.getElementById("enhance_formula").value.trim();
   const openai_api_key = document.getElementById("openai_api_key").value.trim();
   const provider = document.getElementById("provider").value;
+  const language = document.getElementById("language").value;
+  const t = translations[language] || translations.ru;
   if (!formula) {
-    alert("Введите формулу для улучшения");
+    alert(t.error_enter_formula);
     return;
   }
   const payload = { formula, provider };

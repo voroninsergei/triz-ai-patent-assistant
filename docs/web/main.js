@@ -1,10 +1,10 @@
-// Base URL of the API.  If deployed on HuggingFace, adjust accordingly.
+// Base URL of the API. If deployed on HuggingFace, adjust accordingly.
 const API_BASE = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
 const API_FORMULA = `${API_BASE}/formula`;
 const API_ANALYZE = `${API_BASE}/analyze`;
 const API_ENHANCE = `${API_BASE}/enhance`;
 
-// Translation strings for UI.  Russian (ru) and English (en)
+// Translation strings for UI. Russian (ru) and English (en)
 const translations = {
   ru: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -38,6 +38,8 @@ const translations = {
     error_fill_required: "Заполните как минимум «Название» и «Эффект»",
     error_enter_description: "Введите описание изобретения для анализа",
     error_enter_formula: "Введите формулу для улучшения",
+    style_compact: "компактный (без повторений)",
+    style_detailed: "подробный (с повторениями)",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -68,9 +70,11 @@ const translations = {
     field_proposed_title: "Proposed title",
     field_non_obvious: "Non‑obvious features",
     field_justification: "Patentability justification",
-    error_fill_required: "Please fill in at least the \"Name\" and \"Effect\" fields",
+    error_fill_required: "Please fill in at least the "Name" and "Effect" fields",
     error_enter_description: "Enter the invention description for analysis",
     error_enter_formula: "Enter a formula for enhancement",
+    style_compact: "compact (no repetition)",
+    style_detailed: "detailed (with repetition)",
   },
 };
 
@@ -96,16 +100,15 @@ function updateLanguageUI() {
   document.getElementById("label_api_key").childNodes[0].nodeValue = t.label_api_key + "\n";
   document.getElementById("label_provider").childNodes[0].nodeValue = t.label_provider + "\n";
   document.getElementById("enhance_btn").textContent = t.btn_enhance;
-  // Update placeholder texts
+  // Update placeholders
   document.getElementById("title").placeholder = lang === "en" ? "Cooling system for an electric car battery" : "Система охлаждения аккумулятора…";
   document.getElementById("known").placeholder = lang === "en" ? "radiator, electric fan" : "радиатор, электрический вентилятор";
   document.getElementById("distinct").placeholder = lang === "en" ? "heat pipes, controller regulating coolant flow…" : "тепловые трубки, контроллер…";
   document.getElementById("effect").placeholder = lang === "en" ? "maintains cell temperature at 20‑35 °C during fast charging" : "поддерживает температуру ячеек 20‑35 °C…";
   document.getElementById("analyze_text").placeholder = lang === "en" ? "Describe the invention for analysis…" : "Опишите изобретение для анализа…";
   document.getElementById("enhance_formula").placeholder = lang === "en" ? "Enter the formula for enhancement…" : "Введите формулу для улучшения…";
-  document.getElementById("openai_api_key").placeholder = lang === "en" ? "sk‑…" : "sk‑…";
-
-  // Update result section labels (Название, Формула)
+  document.getElementById("openai_api_key").placeholder = "sk‑…";
+  // Update result/analysis/enhancement section labels
   const resultPre = document.getElementById("result");
   if (resultPre) {
     const resultStrong = resultPre.querySelectorAll("strong");
@@ -114,7 +117,6 @@ function updateLanguageUI() {
       resultStrong[1].textContent = t.field_formula + ":";
     }
   }
-  // Update analysis section labels
   const analyzePre = document.getElementById("analyze_result");
   if (analyzePre) {
     const analyzeLabels = analyzePre.querySelectorAll("strong");
@@ -125,7 +127,6 @@ function updateLanguageUI() {
       analyzeLabels[3].textContent = t.field_contradictions + ":";
     }
   }
-  // Update enhancement section labels
   const enhancePre = document.getElementById("enhance_result");
   if (enhancePre) {
     const enhanceLabels = enhancePre.querySelectorAll("strong");
@@ -135,11 +136,16 @@ function updateLanguageUI() {
       enhanceLabels[2].textContent = t.field_justification + ":";
     }
   }
+  // Update style options text
+  const styleSel = document.getElementById("style");
+  if (styleSel && styleSel.options.length >= 2) {
+    styleSel.options[0].text = t.style_compact;
+    styleSel.options[1].text = t.style_detailed;
+  }
 }
 
 // Update UI on language change
 document.getElementById("language").addEventListener("change", updateLanguageUI);
-
 
 async function generate() {
   const title    = document.getElementById("title").value.trim();
@@ -151,12 +157,10 @@ async function generate() {
   const language = document.getElementById("language").value;
 
   if (!title || !effect) {
-    const lang = document.getElementById("language").value;
-    const t = translations[lang] || translations.ru;
+    const t = translations[language] || translations.ru;
     alert(t.error_fill_required);
     return;
   }
-  // Build request body with optional variants
   const payload = { title, known, distinct, effect, style, language };
   if (variants) payload.variants = Number(variants);
 
@@ -174,7 +178,6 @@ async function generate() {
   const data = await resp.json();
   const formula = data.formula;
   const formulaEl = document.getElementById("formula");
-  // If multiple variants returned, join them with line breaks
   if (Array.isArray(formula)) {
     formulaEl.textContent = formula.join("\n\n");
   } else {
@@ -188,9 +191,9 @@ async function analyze() {
   const text        = document.getElementById("analyze_text").value.trim();
   const maxKwInput  = document.getElementById("max_keywords").value;
   const max_keywords = maxKwInput ? Number(maxKwInput) : undefined;
+  const language = document.getElementById("language").value;
+  const t = translations[language] || translations.ru;
   if (!text) {
-    const lang = document.getElementById("language").value;
-    const t = translations[lang] || translations.ru;
     alert(t.error_enter_description);
     return;
   }
@@ -219,8 +222,6 @@ async function analyze() {
     });
   } else {
     const li = document.createElement("li");
-    const lang = document.getElementById("language").value;
-    const t = translations[lang] || translations.ru;
     li.textContent = t.no_contradictions;
     contradictionsList.appendChild(li);
   }
@@ -231,9 +232,9 @@ async function enhance() {
   const formula = document.getElementById("enhance_formula").value.trim();
   const openai_api_key = document.getElementById("openai_api_key").value.trim();
   const provider = document.getElementById("provider").value;
+  const language = document.getElementById("language").value;
+  const t = translations[language] || translations.ru;
   if (!formula) {
-    const lang = document.getElementById("language").value;
-    const t = translations[lang] || translations.ru;
     alert(t.error_enter_formula);
     return;
   }
