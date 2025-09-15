@@ -1,10 +1,12 @@
 // Base URL of the API.  If deployed on HuggingFace, adjust accordingly.
-const API_BASE = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
+const API_BASE   = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
 const API_FORMULA = `${API_BASE}/formula`;
 const API_ANALYZE = `${API_BASE}/analyze`;
 const API_ENHANCE = `${API_BASE}/enhance`;
 
 // Translation strings for UI.  Russian (ru) and English (en)
+// Added style_compact and style_detailed keys so that the formula style
+// drop-down options are translated correctly when the language changes.
 const translations = {
   ru: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -38,6 +40,9 @@ const translations = {
     error_fill_required: "Заполните как минимум «Название» и «Эффект»",
     error_enter_description: "Введите описание изобретения для анализа",
     error_enter_formula: "Введите формулу для улучшения",
+    // Formula style labels in Russian
+    style_compact: "компактный (без повторений)",
+    style_detailed: "подробный (с повторениями)",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -71,9 +76,13 @@ const translations = {
     error_fill_required: "Please fill in at least the \"Name\" and \"Effect\" fields",
     error_enter_description: "Enter the invention description for analysis",
     error_enter_formula: "Enter a formula for enhancement",
+    // Formula style labels in English
+    style_compact: "compact (no repetition)",
+    style_detailed: "detailed (with repetition)",
   },
 };
 
+// Set all UI text to the appropriate language when the language selector changes.
 function updateLanguageUI() {
   const lang = document.getElementById("language").value;
   const t = translations[lang] || translations.ru;
@@ -104,8 +113,13 @@ function updateLanguageUI() {
   document.getElementById("analyze_text").placeholder = lang === "en" ? "Describe the invention for analysis…" : "Опишите изобретение для анализа…";
   document.getElementById("enhance_formula").placeholder = lang === "en" ? "Enter the formula for enhancement…" : "Введите формулу для улучшения…";
   document.getElementById("openai_api_key").placeholder = lang === "en" ? "sk‑…" : "sk‑…";
-
-  // Update result section labels (Название, Формула)
+  // Update style option labels so the drop-down values reflect the selected language.
+  const styleSelect = document.getElementById("style");
+  if (styleSelect && styleSelect.options.length >= 2) {
+    styleSelect.options[0].textContent = t.style_compact;
+    styleSelect.options[1].textContent = t.style_detailed;
+  }
+  // Update result section labels (Название, Формула) if result is visible
   const resultPre = document.getElementById("result");
   if (resultPre) {
     const resultStrong = resultPre.querySelectorAll("strong");
@@ -114,7 +128,7 @@ function updateLanguageUI() {
       resultStrong[1].textContent = t.field_formula + ":";
     }
   }
-  // Update analysis section labels
+  // Update analysis section labels if they exist
   const analyzePre = document.getElementById("analyze_result");
   if (analyzePre) {
     const analyzeLabels = analyzePre.querySelectorAll("strong");
@@ -125,7 +139,7 @@ function updateLanguageUI() {
       analyzeLabels[3].textContent = t.field_contradictions + ":";
     }
   }
-  // Update enhancement section labels
+  // Update enhancement section labels if they exist
   const enhancePre = document.getElementById("enhance_result");
   if (enhancePre) {
     const enhanceLabels = enhancePre.querySelectorAll("strong");
@@ -137,10 +151,10 @@ function updateLanguageUI() {
   }
 }
 
-// Update UI on language change
+// Re-render language-dependent UI whenever the language select changes.
 document.getElementById("language").addEventListener("change", updateLanguageUI);
 
-
+// Generate a patent formula using the backend API
 async function generate() {
   const title    = document.getElementById("title").value.trim();
   const known    = document.getElementById("known").value.trim();
@@ -149,28 +163,24 @@ async function generate() {
   const style    = document.getElementById("style").value;
   const variants = document.getElementById("variants").value;
   const language = document.getElementById("language").value;
-
+  // Validate required fields
   if (!title || !effect) {
-    const lang = document.getElementById("language").value;
-    const t = translations[lang] || translations.ru;
+    const t = translations[language] || translations.ru;
     alert(t.error_fill_required);
     return;
   }
   // Build request body with optional variants
   const payload = { title, known, distinct, effect, style, language };
   if (variants) payload.variants = Number(variants);
-
   const resp = await fetch(API_FORMULA, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
   if (!resp.ok) {
     alert(`Ошибка API: ${resp.status}`);
     return;
   }
-
   const data = await resp.json();
   const formula = data.formula;
   const formulaEl = document.getElementById("formula");
@@ -184,12 +194,13 @@ async function generate() {
   document.getElementById("result").classList.remove("hidden");
 }
 
+// Analyze a given invention description using the backend API
 async function analyze() {
   const text        = document.getElementById("analyze_text").value.trim();
   const maxKwInput  = document.getElementById("max_keywords").value;
   const max_keywords = maxKwInput ? Number(maxKwInput) : undefined;
+  const lang = document.getElementById("language").value;
   if (!text) {
-    const lang = document.getElementById("language").value;
     const t = translations[lang] || translations.ru;
     alert(t.error_enter_description);
     return;
@@ -219,7 +230,6 @@ async function analyze() {
     });
   } else {
     const li = document.createElement("li");
-    const lang = document.getElementById("language").value;
     const t = translations[lang] || translations.ru;
     li.textContent = t.no_contradictions;
     contradictionsList.appendChild(li);
@@ -227,12 +237,13 @@ async function analyze() {
   document.getElementById("analyze_result").classList.remove("hidden");
 }
 
+// Enhance an existing patent formula using the backend API
 async function enhance() {
   const formula = document.getElementById("enhance_formula").value.trim();
   const openai_api_key = document.getElementById("openai_api_key").value.trim();
   const provider = document.getElementById("provider").value;
+  const lang = document.getElementById("language").value;
   if (!formula) {
-    const lang = document.getElementById("language").value;
     const t = translations[lang] || translations.ru;
     alert(t.error_enter_formula);
     return;
@@ -255,10 +266,10 @@ async function enhance() {
   document.getElementById("enhance_result").classList.remove("hidden");
 }
 
-// Attach event listeners
+// Attach event listeners for user actions
 document.getElementById("btn").onclick = generate;
 document.getElementById("analyze_btn").onclick = analyze;
 document.getElementById("enhance_btn").onclick = enhance;
 
-// Initialise UI language on page load
+// Initialise UI on page load
 updateLanguageUI();
