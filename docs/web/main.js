@@ -82,6 +82,35 @@ const translations = {
   },
 };
 
+// Mapping of Russian connecting phrases to their bolded Russian
+// or English equivalents. Used to replace phrases in generated formulas
+// depending on the selected language. For Russian, the phrases are wrapped
+// in <b> tags; for English, they are translated and wrapped in <b> tags.
+const connectorPhrases = {
+  ru: {
+    "включающий": "<b>включающий</b>",
+    "отличающийся тем, что": "<b>отличающийся тем, что</b>",
+    "обеспечивает": "<b>обеспечивает</b>",
+  },
+  en: {
+    "включающий": "<b>including</b>",
+    "отличающийся тем, что": "<b>characterized in that</b>",
+    "обеспечивает": "<b>provides</b>",
+  },
+};
+
+// Replace connector phrases in a formula string and return formatted HTML.
+function formatFormulaText(text, lang) {
+  let result = text || "";
+  const dict = connectorPhrases[lang] || connectorPhrases.ru;
+  Object.keys(dict).forEach((phrase) => {
+    // Use global replacement to replace all occurrences.
+    const re = new RegExp(phrase, 'g');
+    result = result.replace(re, dict[phrase]);
+  });
+  return result;
+}
+
 // Set all UI text to the appropriate language when the language selector changes.
 function updateLanguageUI() {
   const lang = document.getElementById("language").value;
@@ -184,11 +213,12 @@ async function generate() {
   const data = await resp.json();
   const formula = data.formula;
   const formulaEl = document.getElementById("formula");
-  // If multiple variants returned, join them with line breaks
+  // Format the returned formulas: replace connector phrases and bold them.
   if (Array.isArray(formula)) {
-    formulaEl.textContent = formula.join("\n\n");
+    const formatted = formula.map((f) => formatFormulaText(f, language));
+    formulaEl.innerHTML = formatted.join("<br/><br/>");
   } else {
-    formulaEl.textContent = formula;
+    formulaEl.innerHTML = formatFormulaText(formula, language);
   }
   document.getElementById("f_title").textContent = title;
   document.getElementById("result").classList.remove("hidden");
