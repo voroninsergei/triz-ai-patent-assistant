@@ -34,6 +34,11 @@ const translations = {
     // Field labels for result section
     field_title: "Название",
     field_formula: "Формула",
+    // Field labels for analysis section
+    field_keywords: "Ключевые слова",
+    field_ipc: "IPC‑коды",
+    field_triz: "TRIZ‑функции",
+    field_contradictions: "Противоречия",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -61,6 +66,11 @@ const translations = {
     // Field labels for result section
     field_title: "Name",
     field_formula: "Formula",
+    // Field labels for analysis section
+    field_keywords: "Keywords",
+    field_ipc: "IPC codes",
+    field_triz: "TRIZ functions",
+    field_contradictions: "Contradictions",
   },
 };
 
@@ -138,6 +148,18 @@ function updateLanguageUI() {
     if (resultStrong && resultStrong.length >= 2) {
       resultStrong[0].textContent = t.field_title + ":";
       resultStrong[1].textContent = t.field_formula + ":";
+    }
+  }
+
+  // Update analysis section labels if they exist
+  const analyzePre = document.getElementById("analyze_result");
+  if (analyzePre) {
+    const analyzeLabels = analyzePre.querySelectorAll("strong");
+    if (analyzeLabels && analyzeLabels.length >= 4) {
+      analyzeLabels[0].textContent = t.field_keywords + ":";
+      analyzeLabels[1].textContent = t.field_ipc + ":";
+      analyzeLabels[2].textContent = t.field_triz + ":";
+      analyzeLabels[3].textContent = t.field_contradictions + ":";
     }
   }
 }
