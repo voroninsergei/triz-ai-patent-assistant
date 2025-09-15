@@ -236,8 +236,7 @@ async function analyze() {
     return;
   }
   const payload = { text };
-  // Pass the selected language to the analysis API so it can return results accordingly
-  payload.language = lang;
+  // Do not send language to the analysis API; it infers language automatically. Sending it may suppress IPC/TRIZ detection.
   if (max_keywords) payload.max_keywords = max_keywords;
   const resp = await fetch(API_ANALYZE, {
     method: "POST",
