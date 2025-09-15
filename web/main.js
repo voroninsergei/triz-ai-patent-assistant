@@ -31,6 +31,9 @@ const translations = {
     // Formula style labels in Russian
     style_compact: "компактный (без повторений)",
     style_detailed: "подробный (с повторениями)",
+    // Field labels for result section
+    field_title: "Название",
+    field_formula: "Формула",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -55,6 +58,9 @@ const translations = {
     // Formula style labels in English
     style_compact: "compact (no repetition)",
     style_detailed: "detailed (with repetition)",
+    // Field labels for result section
+    field_title: "Name",
+    field_formula: "Formula",
   },
 };
 
@@ -123,6 +129,16 @@ function updateLanguageUI() {
   if (styleSelect && styleSelect.options.length >= 2) {
     styleSelect.options[0].textContent = t.style_compact;
     styleSelect.options[1].textContent = t.style_detailed;
+  }
+
+  // Update result section labels (Название, Формула) if result is visible
+  const resultPre = document.getElementById("result");
+  if (resultPre) {
+    const resultStrong = resultPre.querySelectorAll("strong");
+    if (resultStrong && resultStrong.length >= 2) {
+      resultStrong[0].textContent = t.field_title + ":";
+      resultStrong[1].textContent = t.field_formula + ":";
+    }
   }
 }
 
