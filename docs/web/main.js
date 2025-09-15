@@ -236,6 +236,8 @@ async function analyze() {
     return;
   }
   const payload = { text };
+  // Pass the selected language to the analysis API so it can return results accordingly
+  payload.language = lang;
   if (max_keywords) payload.max_keywords = max_keywords;
   const resp = await fetch(API_ANALYZE, {
     method: "POST",
@@ -265,6 +267,9 @@ async function analyze() {
     contradictionsList.appendChild(li);
   }
   document.getElementById("analyze_result").classList.remove("hidden");
+
+  // After displaying analysis results, update labels according to the selected language
+  updateLanguageUI();
 }
 
 // Enhance an existing patent formula using the backend API
