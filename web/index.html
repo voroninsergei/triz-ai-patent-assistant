@@ -1,17 +1,75 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <!-- Redirect to the working UI under docs/web.  This ensures that the URL
-       /web/ does not return 404 when GitHub Pages is configured to serve
-       the project root or /docs.  Adjust the path if your Pages source
-       differs. -->
-  <meta http-equiv="refresh" content="0; url=/triz-ai-patent-assistant/docs/web/" />
-  <title>Redirecting…</title>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>TRIZ‑AI Patent Assistant</title>
+  <link rel="stylesheet" href="../docs/web/style.css" />
 </head>
 <body>
-  <p>If you are not redirected automatically, follow this
-     <a href="/triz-ai-patent-assistant/docs/web/">link to the interface</a>.
-  </p>
+  <h1>TRIZ‑AI Patent Assistant</h1>
+
+  <section id="formula_section">
+    <label id="label_language" for="language">Formula language
+      <select id="language">
+        <option value="ru">русский</option>
+        <option value="en">English</option>
+      </select>
+    </label>
+    <label id="label_title" for="title">Name (object + function)
+      <input type="text" id="title" />
+    </label>
+    <label id="label_known" for="known">Known features
+      <textarea id="known" rows="2"></textarea>
+    </label>
+    <label id="label_distinct" for="distinct">Distinctive features
+      <textarea id="distinct" rows="2"></textarea>
+    </label>
+    <label id="label_effect" for="effect">Effect (technical result)
+      <input type="text" id="effect" />
+    </label>
+    <label id="label_style" for="style">Formula style
+      <select id="style">
+        <option value="compact">compact (no repetition)</option>
+        <option value="detailed">detailed (with repetition)</option>
+      </select>
+    </label>
+    <label id="label_variants" for="variants">Number of variants (leave blank for one variant)
+      <input type="number" id="variants" min="1" />
+    </label>
+    <button id="btn">Generate formula</button>
+    <pre id="result"></pre>
+  </section>
+  <section id="analyze_section">
+    <h2>Invention analysis</h2>
+    <label id="label_analyze_text" for="analyze_text">Description text for analysis
+      <textarea id="analyze_text" rows="4"></textarea>
+    </label>
+    <label id="label_max_keywords" for="max_keywords">Max. number of keywords
+      <input type="number" id="max_keywords" min="1" value="10" />
+    </label>
+    <button id="analyze_btn">Analyze</button>
+    <pre id="analyze_result"></pre>
+  </section>
+  <section id="enhance_section">
+    <h2>Enhance formula</h2>
+    <label id="label_enhance_formula" for="enhance_text">Formula for enhancement
+      <textarea id="enhance_text" rows="4"></textarea>
+    </label>
+    <label id="label_api_key" for="api_key">API key (optional, for using LLM)
+      <input type="text" id="api_key" />
+    </label>
+    <label id="label_provider" for="provider">Provider
+      <select id="provider">
+        <option value="openai">OpenAI</option>
+        <option value="yandexgpt">YandexGPT</option>
+      </select>
+    </label>
+    <button id="enhance_btn">Enhance formula</button>
+    <pre id="enhance_result"></pre>
+  </section>
+  <!-- Use relative path to the main script in docs/web so that both
+       directories share the same logic -->
+  <script src="../docs/web/main.js"></script>
 </body>
 </html>
