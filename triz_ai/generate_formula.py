@@ -31,11 +31,13 @@ Usage::
     )
     claim = generate_formula(idea_text)
     print(claim)
-
 """
 
 import re
-from typing import List, Optional
+import logging
+import time
+from typing import Dict, Tuple, Union, Literal, List as _List, Optional as _Optional, List, Optional
+
 
 def _extract_section(text: str, markers: List[str]) -> Optional[str]:
     """Return the first substring in ``text`` that follows any of the given
@@ -119,11 +121,8 @@ def _collect_sentences(text: str, markers: List[str]) -> str:
 # and narrow) as a list.  See the docstring of ``generate_formula`` below
 # for details.
 
-import logging
-import time
-from typing import Dict, Tuple, Union, Literal, List as _List, Optional as _Optional
-
 logger = logging.getLogger(__name__)
+
 
 # -----------------------------------------------------------------------------
 # Optional synonym support
@@ -131,18 +130,31 @@ logger = logging.getLogger(__name__)
 # To generate additional linguistic diversity in claim variants, we attempt to
 # import resources for Russian and English synonyms.  The ``ru_synonyms``
 # package provides a graph of Russian synonyms, while English synonyms are
-# obtained from WordNet via NLTK.  These imports are optional: if the
-# dependencies are not available at runtime, synonym substitution simply
-# falls back to returning the original phrase.
+# obtained from our local ``en_synonyms`` package when available or via
+# WordNet through NLTK.  These imports are optional: if the dependencies
+# are not available at runtime, synonym substitution simply falls back to
+# returning the original phrase.
 try:
     from ru_synonyms.synonyms import SynonymsGraph  # type: ignore
     _RU_SYNGRAPH = SynonymsGraph()
 except Exception:
     _RU_SYNGRAPH = None  # type: ignore
+
+# Attempt to import an English synonyms graph from our own package.  This
+# module may not exist in all installations (for example, when the
+# ``en_synonyms`` package is not included).  Therefore we wrap the
+# import in a try/except block and set ``_EN_SYNGRAPH`` accordingly.
+try:
+    from en_synonyms.synonyms import SynonymsGraph as EnglishSynonymsGraph  # type: ignore
+    _EN_SYNGRAPH = EnglishSynonymsGraph()
+except Exception:
+    _EN_SYNGRAPH = None  # type: ignore
+
 try:
     from nltk.corpus import wordnet  # type: ignore
 except Exception:
     wordnet = None  # type: ignore
+
 
 def _replace_first_word_with_synonym(phrase: str, variant_index: int, lang: str) -> str:
     """Replace the first word of ``phrase`` with a synonym when possible.
@@ -174,15 +186,22 @@ def _replace_first_word_with_synonym(phrase: str, variant_index: int, lang: str)
             syns = list(_RU_SYNGRAPH.get_synonyms(original))
         except Exception:
             syns = []
-    elif lang == 'en' and wordnet is not None:
-        try:
-            for syn in wordnet.synsets(original):
-                for lemma in syn.lemmas():
-                    name = lemma.name().replace('_', ' ')
-                    if name.lower() != original.lower():
-                        syns.append(name)
-        except Exception:
-            syns = []
+    elif lang == 'en':
+        # Prefer offline English synonyms graph if available
+        if _EN_SYNGRAPH:
+            try:
+                syns = list(_EN_SYNGRAPH.get_synonyms(original))
+            except Exception:
+                syns = []
+        elif wordnet is not None:
+            try:
+                for syn in wordnet.synsets(original):
+                    for lemma in syn.lemmas():
+                        name = lemma.name().replace('_', ' ')
+                        if name.lower() != original.lower():
+                            syns.append(name)
+            except Exception:
+                syns = []
     # Remove duplicates and sort for deterministic ordering
     syns = sorted(set(syns), key=str.lower)
     if syns:
@@ -445,7 +464,7 @@ def build_formula(name: str, known: str, distinctive: str, effect: str, language
     # Join parts with commas
     formula = ', '.join([p.strip() for p in parts if p.strip()])
     formula = formula.strip()
-    if formula and not formula.endswith('.'):
+    if formula and not formula.endswith('.'):  # ensure a period at the end
         formula += '.'
     return formula
 
@@ -523,8 +542,8 @@ def generate_formula(
        :func:`parse_input`.
 
     2. **Explicit parts:** When ``known``, ``distinct`` or ``effect`` are
-       explicitly passed, the first argument is interpreted as the title of
-       the invention and the remaining strings supply the known features,
+       explicitly passed, the first argument is interpreted as the title of the
+       invention and the remaining strings supply the known features,
        distinctive features and intended effect directly.
 
     Parameters
@@ -564,7 +583,7 @@ def generate_formula(
     # Normalise variants parameter: cast to int where possible
     if variants is not None:
         try:
-            variants = int(variants)
+            variants = int(variants)  # type: ignore
         except (ValueError, TypeError):
             variants = None
 

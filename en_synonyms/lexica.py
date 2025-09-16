@@ -5,6 +5,7 @@ import abc
 from typing import Iterator
 import networkx as nx
 
+
 class LexicalGraphInterface(abc.ABC):
     """The LexicalGraphInterface object gives you various lexicas depending on Graph used."""
 
