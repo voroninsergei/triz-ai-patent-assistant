@@ -236,7 +236,11 @@ async function analyze() {
     return;
   }
   const payload = { text };
-  // Do not send language to the analysis API; it infers language automatically. Sending it may suppress IPC/TRIZ detection.
+  // Include language hint for English analysis.  The backend can infer Russian automatically,
+  // but for English we explicitly pass the language code to ensure IPC/TRIZ detection works.
+  if (lang === "en") {
+    payload.language = "en";
+  }
   if (max_keywords) payload.max_keywords = max_keywords;
   const resp = await fetch(API_ANALYZE, {
     method: "POST",
