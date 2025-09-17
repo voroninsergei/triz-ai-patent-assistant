@@ -1,7 +1,10 @@
-{"word": "device", "synonyms": ["apparatus", "gadget", "contrivance", "machine"]}
-{"word": "car", "synonyms": ["automobile", "motorcar", "vehicle", "auto"]}
-{"word": "system", "synonyms": ["arrangement", "scheme", "setup", "structure"]}
+{"word": "device", "synonyms": ["apparatus", "gadget", "appliance", "contrivance", "instrument"]}
+{"word": "car", "synonyms": ["automobile", "vehicle", "motorcar", "auto"]}
+{"word": "system", "synonyms": ["arrangement", "structure", "setup", "framework", "scheme"]}
 {"word": "cooling", "synonyms": ["refrigeration", "chilling"]}
-{"word": "battery", "synonyms": ["accumulator", "power cell"]}
-{"word": "controller", "synonyms": ["regulator", "manager", "governor"]}
-{"word": "pipes", "synonyms": ["tubes"]}
+{"word": "battery", "synonyms": ["accumulator", "power cell", "storage battery"]}
+{"word": "controller", "synonyms": ["regulator", "control unit", "manager", "governor"]}
+{"word": "pipes", "synonyms": ["tubes", "conduits"]}
+{"word": "heat", "synonyms": ["thermal energy", "warmth"]}
+{"word": "radiator", "synonyms": ["heat exchanger", "cooler"]}
+{"word": "fan", "synonyms": ["ventilator", "blower"]}
