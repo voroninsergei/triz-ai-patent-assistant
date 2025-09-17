@@ -133,22 +133,91 @@ logger = logging.getLogger(__name__)
 # obtained from our local ``en_synonyms`` package when available or via
 # WordNet through NLTK.  These imports are optional: if the dependencies
 # are not available at runtime, synonym substitution simply falls back to
-# returning the original phrase.
+# returning the original phrase.  To make synonymisation more robust in
+# environments where ``networkx`` or the synonym packages are missing, we
+# provide fallback dictionaries by parsing the bundled synonym files.
+
+_RU_SYNGRAPH = None  # type: ignore
+_EN_SYNGRAPH = None  # type: ignore
+_RU_SYN_DICT: Dict[str, _List[str]] = {}
+_EN_SYN_DICT: Dict[str, _List[str]] = {}
+
+# Attempt to import the graph‑based Russian synonyms.  If this fails (for
+# example, due to a missing ``networkx`` dependency), fall back to a
+# dictionary built from the ``ru_synonyms/_data/synonyms.adjlist`` file.
 try:
     from ru_synonyms.synonyms import SynonymsGraph  # type: ignore
-    _RU_SYNGRAPH = SynonymsGraph()
+    _RU_SYNGRAPH = SynonymsGraph()  # type: ignore
 except Exception:
-    _RU_SYNGRAPH = None  # type: ignore
+    try:
+        from pathlib import Path
+        synonyms_path = Path(__file__).resolve().parent.parent / 'ru_synonyms' / '_data' / 'synonyms.adjlist'
+        if synonyms_path.exists():
+            temp_ru: Dict[str, set] = {}
+            with synonyms_path.open('r', encoding='utf-8') as f:
+                for line in f:
+                    tokens = line.strip().split()
+                    if not tokens:
+                        continue
+                    head, *syns = tokens
+                    for syn in syns:
+                        temp_ru.setdefault(head, set()).add(syn)
+                        temp_ru.setdefault(syn, set()).add(head)
+            _RU_SYN_DICT = {k: sorted(v) for k, v in temp_ru.items()}
+    except Exception:
+        _RU_SYN_DICT = {}
 
-# Attempt to import an English synonyms graph from our own package.  This
-# module may not exist in all installations (for example, when the
-# ``en_synonyms`` package is not included).  Therefore we wrap the
-# import in a try/except block and set ``_EN_SYNGRAPH`` accordingly.
+# Attempt to import the graph‑based English synonyms.  If this fails, fall
+# back to a dictionary by parsing the ``en_synonyms/en_thesaurus.jsonl`` and
+# ``en_synonyms/_data/synonyms.adjlist`` files.  Words are normalised to
+# lowercase with spaces.
 try:
     from en_synonyms.synonyms import SynonymsGraph as EnglishSynonymsGraph  # type: ignore
-    _EN_SYNGRAPH = EnglishSynonymsGraph()
+    _EN_SYNGRAPH = EnglishSynonymsGraph()  # type: ignore
 except Exception:
-    _EN_SYNGRAPH = None  # type: ignore
+    try:
+        import json
+        from pathlib import Path
+        temp_en: Dict[str, set] = {}
+        # parse small adjacency list if present
+        adj_path = Path(__file__).resolve().parent.parent / 'en_synonyms' / '_data' / 'synonyms.adjlist'
+        if adj_path.exists():
+            with adj_path.open('r', encoding='utf-8') as f:
+                for line in f:
+                    tokens = line.strip().split()
+                    if not tokens:
+                        continue
+                    head, *syns = tokens
+                    head_norm = head.strip().lower().replace('_', ' ')
+                    for syn in syns:
+                        syn_norm = syn.strip().lower().replace('_', ' ')
+                        temp_en.setdefault(head_norm, set()).add(syn_norm)
+                        temp_en.setdefault(syn_norm, set()).add(head_norm)
+        # parse comprehensive thesaurus if available
+        jsonl_path = Path(__file__).resolve().parent.parent / 'en_synonyms' / 'en_thesaurus.jsonl'
+        if jsonl_path.exists():
+            with jsonl_path.open('r', encoding='utf-8') as f:
+                for line in f:
+                    line = line.strip()
+                    if not line:
+                        continue
+                    try:
+                        item = json.loads(line)
+                    except Exception:
+                        continue
+                    word = item.get('word')
+                    synonyms = item.get('synonyms', [])
+                    if not word or not synonyms:
+                        continue
+                    w = str(word).strip().lower().replace('_', ' ')
+                    for syn in synonyms:
+                        s = str(syn).strip().lower().replace('_', ' ')
+                        if s and s != w:
+                            temp_en.setdefault(w, set()).add(s)
+                            temp_en.setdefault(s, set()).add(w)
+        _EN_SYN_DICT = {k: sorted(v) for k, v in temp_en.items()}
+    except Exception:
+        _EN_SYN_DICT = {}
 
 try:
     from nltk.corpus import wordnet  # type: ignore
@@ -181,27 +250,36 @@ def _replace_first_word_with_synonym(phrase: str, variant_index: int, lang: str)
         return phrase
     original = words[0]
     syns: _List[str] = []
-    if lang == 'ru' and _RU_SYNGRAPH:
-        try:
-            syns = list(_RU_SYNGRAPH.get_synonyms(original))
-        except Exception:
-            syns = []
+    if lang == 'ru':
+        # Use graph‑based synonyms if available
+        if _RU_SYNGRAPH is not None:
+            try:
+                syns = list(_RU_SYNGRAPH.get_synonyms(original))  # type: ignore[attr-defined]
+            except Exception:
+                syns = []
+        else:
+            # Fallback to dictionary‑based synonyms
+            syns = list(_RU_SYN_DICT.get(original, []))
     elif lang == 'en':
         # Prefer offline English synonyms graph if available
-        if _EN_SYNGRAPH:
+        if _EN_SYNGRAPH is not None:
             try:
-                syns = list(_EN_SYNGRAPH.get_synonyms(original))
+                syns = list(_EN_SYNGRAPH.get_synonyms(original))  # type: ignore[attr-defined]
             except Exception:
                 syns = []
-        elif wordnet is not None:
-            try:
-                for syn in wordnet.synsets(original):
-                    for lemma in syn.lemmas():
-                        name = lemma.name().replace('_', ' ')
-                        if name.lower() != original.lower():
-                            syns.append(name)
-            except Exception:
-                syns = []
+        else:
+            # Fallback to dictionary‑based synonyms first
+            syns = list(_EN_SYN_DICT.get(original.lower(), []))
+            # If still empty, fallback to WordNet if available
+            if not syns and wordnet is not None:
+                try:
+                    for syn in wordnet.synsets(original):
+                        for lemma in syn.lemmas():
+                            name = lemma.name().replace('_', ' ')
+                            if name.lower() != original.lower():
+                                syns.append(name)
+                except Exception:
+                    syns = []
     # Remove duplicates and sort for deterministic ordering
     syns = sorted(set(syns), key=str.lower)
     if syns:
