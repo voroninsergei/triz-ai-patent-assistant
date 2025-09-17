@@ -12,7 +12,7 @@ const translations = {
     label_known: "Известные признаки",
     label_distinct: "Отличительные признаки",
     label_effect: "Эффект (технический результат)",
-    label_language: "Язык формулы (Formula language)",
+    label_language: "Язык формулы",
     label_style: "Стиль формулы",
     label_variants: "Количество вариантов (оставьте пустым для одного варианта)",
     btn_generate: "Сгенерировать формулу",
@@ -26,6 +26,18 @@ const translations = {
     label_provider: "Провайдер",
     btn_enhance: "Улучшить формулу",
     no_contradictions: "Противоречия не обнаружены",
+    field_title: "Название",
+    field_formula: "Формула",
+    field_keywords: "Ключевые слова",
+    field_ipc: "IPC‑коды",
+    field_triz: "TRIZ‑функции",
+    field_contradictions: "Противоречия",
+    field_proposed_title: "Предлагаемое название",
+    field_non_obvious: "Неочевидные признаки",
+    field_justification: "Обоснование патентоспособности",
+    error_fill_required: "Заполните как минимум «Название» и «Эффект»",
+    error_enter_description: "Введите описание изобретения для анализа",
+    error_enter_formula: "Введите формулу для улучшения",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -47,6 +59,18 @@ const translations = {
     label_provider: "Provider",
     btn_enhance: "Enhance formula",
     no_contradictions: "No contradictions found",
+    field_title: "Name",
+    field_formula: "Formula",
+    field_keywords: "Keywords",
+    field_ipc: "IPC codes",
+    field_triz: "TRIZ functions",
+    field_contradictions: "Contradictions",
+    field_proposed_title: "Proposed title",
+    field_non_obvious: "Non‑obvious features",
+    field_justification: "Patentability justification",
+    error_fill_required: "Please fill in at least the \"Name\" and \"Effect\" fields",
+    error_enter_description: "Enter the invention description for analysis",
+    error_enter_formula: "Enter a formula for enhancement",
   },
 };
 
@@ -80,10 +104,42 @@ function updateLanguageUI() {
   document.getElementById("analyze_text").placeholder = lang === "en" ? "Describe the invention for analysis…" : "Опишите изобретение для анализа…";
   document.getElementById("enhance_formula").placeholder = lang === "en" ? "Enter the formula for enhancement…" : "Введите формулу для улучшения…";
   document.getElementById("openai_api_key").placeholder = lang === "en" ? "sk‑…" : "sk‑…";
+
+  // Update result section labels (Название, Формула)
+  const resultPre = document.getElementById("result");
+  if (resultPre) {
+    const resultStrong = resultPre.querySelectorAll("strong");
+    if (resultStrong && resultStrong.length >= 2) {
+      resultStrong[0].textContent = t.field_title + ":";
+      resultStrong[1].textContent = t.field_formula + ":";
+    }
+  }
+  // Update analysis section labels
+  const analyzePre = document.getElementById("analyze_result");
+  if (analyzePre) {
+    const analyzeLabels = analyzePre.querySelectorAll("strong");
+    if (analyzeLabels && analyzeLabels.length >= 4) {
+      analyzeLabels[0].textContent = t.field_keywords + ":";
+      analyzeLabels[1].textContent = t.field_ipc + ":";
+      analyzeLabels[2].textContent = t.field_triz + ":";
+      analyzeLabels[3].textContent = t.field_contradictions + ":";
+    }
+  }
+  // Update enhancement section labels
+  const enhancePre = document.getElementById("enhance_result");
+  if (enhancePre) {
+    const enhanceLabels = enhancePre.querySelectorAll("strong");
+    if (enhanceLabels && enhanceLabels.length >= 3) {
+      enhanceLabels[0].textContent = t.field_proposed_title + ":";
+      enhanceLabels[1].textContent = t.field_non_obvious + ":";
+      enhanceLabels[2].textContent = t.field_justification + ":";
+    }
+  }
 }
 
 // Update UI on language change
 document.getElementById("language").addEventListener("change", updateLanguageUI);
+
 
 async function generate() {
   const title    = document.getElementById("title").value.trim();
@@ -95,7 +151,9 @@ async function generate() {
   const language = document.getElementById("language").value;
 
   if (!title || !effect) {
-    alert("Заполните как минимум «Название» и «Эффект»");
+    const lang = document.getElementById("language").value;
+    const t = translations[lang] || translations.ru;
+    alert(t.error_fill_required);
     return;
   }
   // Build request body with optional variants
@@ -131,7 +189,9 @@ async function analyze() {
   const maxKwInput  = document.getElementById("max_keywords").value;
   const max_keywords = maxKwInput ? Number(maxKwInput) : undefined;
   if (!text) {
-    alert("Введите описание изобретения для анализа");
+    const lang = document.getElementById("language").value;
+    const t = translations[lang] || translations.ru;
+    alert(t.error_enter_description);
     return;
   }
   const payload = { text };
@@ -160,7 +220,8 @@ async function analyze() {
   } else {
     const li = document.createElement("li");
     const lang = document.getElementById("language").value;
-    li.textContent = translations[lang].no_contradictions;
+    const t = translations[lang] || translations.ru;
+    li.textContent = t.no_contradictions;
     contradictionsList.appendChild(li);
   }
   document.getElementById("analyze_result").classList.remove("hidden");
@@ -171,7 +232,9 @@ async function enhance() {
   const openai_api_key = document.getElementById("openai_api_key").value.trim();
   const provider = document.getElementById("provider").value;
   if (!formula) {
-    alert("Введите формулу для улучшения");
+    const lang = document.getElementById("language").value;
+    const t = translations[lang] || translations.ru;
+    alert(t.error_enter_formula);
     return;
   }
   const payload = { formula, provider };
