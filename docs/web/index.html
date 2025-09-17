@@ -1,95 +1,110 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ru">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>TRIZ‑AI Patent Assistant</title>
-  <link rel="stylesheet" href="style.css" />
+<meta charset="utf-8" />
+<title>TRIZ‑AI Patent Assistant</title>
+<link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <h1>TRIZ‑AI Patent Assistant</h1>
+<h1>TRIZ‑AI Patent Assistant</h1>
 
-  <!-- Formula generation section -->
-  <section id="formula_section">
-    <label id="label_language" for="language">Formula language
-      <select id="language">
-        <option value="ru">русский</option>
-        <option value="en">English</option>
-      </select>
-    </label>
+<label id="label_title">Название (объект + функция)
+  <input id="title" placeholder="Система охлаждения аккумулятора…" />
+</label>
 
-    <label id="label_title" for="title">Name (object + function)
-      <input type="text" id="title" />
-    </label>
+<label id="label_known">Известные признаки
+  <textarea id="known" placeholder="радиатор, электрический вентилятор"></textarea>
+</label>
 
-    <label id="label_known" for="known">Known features
-      <textarea id="known" rows="2"></textarea>
-    </label>
+<label id="label_distinct">Отличительные признаки
+  <textarea id="distinct" placeholder="тепловые трубки, контроллер…"></textarea>
+</label>
 
-    <label id="label_distinct" for="distinct">Distinctive features
-      <textarea id="distinct" rows="2"></textarea>
-    </label>
+<label id="label_effect">Эффект (технический результат)
+  <input id="effect" placeholder="поддерживает температуру ячеек 20‑35 °C…" />
+</label>
 
-    <label id="label_effect" for="effect">Effect (technical result)
-      <input type="text" id="effect" />
-    </label>
+<!-- Additional options for language, style and variants -->
+<!-- Language selector at the top -->
+<label id="label_language">Язык формулы
+  <select id="language">
+    <option value="ru" selected>русский</option>
+    <option value="en">английский</option>
+  </select>
+</label>
 
-    <label id="label_style" for="style">Formula style
-      <select id="style">
-        <option value="compact">compact (no repetition)</option>
-        <option value="detailed">detailed (with repetition)</option>
-      </select>
-    </label>
+<!-- Additional options for style and variants -->
+<label id="label_style">Стиль формулы
+  <select id="style">
+    <option value="compact" selected>компактный (без повторений)</option>
+    <option value="verbose">подробный (с повторениями)</option>
+  </select>
+</label>
 
-    <label id="label_variants" for="variants">Number of variants (leave blank for one variant)
-      <input type="number" id="variants" min="1" />
-    </label>
+<label id="label_variants">Количество вариантов (оставьте пустым для одного варианта)
+  <input id="variants" type="number" min="2" placeholder="2" />
+</label>
 
-    <button id="btn">Generate formula</button>
+<!-- Generate formula -->
+<button id="btn">Сгенерировать формулу</button>
 
-    <pre id="result"></pre>
-  </section>
+<pre id="result" class="hidden">
+<strong>Название:</strong> <span id="f_title"></span>
 
-  <!-- Analysis section -->
-  <section id="analyze_section">
-    <h2>Invention analysis</h2>
-    <label id="label_analyze_text" for="analyze_text">Description text for analysis
-      <textarea id="analyze_text" rows="4"></textarea>
-    </label>
+<strong>Формула:</strong>
+<code id="formula"></code>
+</pre>
 
-    <label id="label_max_keywords" for="max_keywords">Max. number of keywords
-      <input type="number" id="max_keywords" min="1" value="10" />
-    </label>
+<!-- Section for invention analysis -->
+<hr />
+<h2>Анализ изобретения</h2>
+<label id="label_analyze_text">Текст описания изобретения
+  <textarea id="analyze_text" placeholder="Опишите изобретение для анализа…"></textarea>
+</label>
+<label id="label_max_keywords">Макс. количество ключевых слов
+  <input id="max_keywords" type="number" min="1" max="20" placeholder="10" />
+</label>
+<button id="analyze_btn">Анализировать</button>
 
-    <button id="analyze_btn">Analyze</button>
+<pre id="analyze_result" class="hidden">
+<strong>Ключевые слова:</strong> <span id="keywords"></span>
 
-    <pre id="analyze_result"></pre>
-  </section>
+<strong>IPC‑коды:</strong> <span id="ipc_codes"></span>
 
-  <!-- Enhancement section -->
-  <section id="enhance_section">
-    <h2>Enhance formula</h2>
-    <label id="label_enhance_formula" for="enhance_text">Formula for enhancement
-      <textarea id="enhance_text" rows="4"></textarea>
-    </label>
+<strong>TRIZ‑функции:</strong> <span id="triz_functions"></span>
 
-    <label id="label_api_key" for="api_key">API key (optional, for using LLM)
-      <input type="text" id="api_key" />
-    </label>
+<strong>Противоречия:</strong>
+<ul id="contradictions"></ul>
+</pre>
 
-    <label id="label_provider" for="provider">Provider
-      <select id="provider">
-        <option value="openai">OpenAI</option>
-        <option value="yandexgpt">YandexGPT</option>
-      </select>
-    </label>
+<!-- Section for formula enhancement -->
+<hr />
+<h2>Улучшение формулы</h2>
+<label id="label_enhance_formula">Формула для улучшения
+  <textarea id="enhance_formula" placeholder="Введите формулу для улучшения…"></textarea>
+</label>
+<label id="label_api_key">API‑ключ (опционально, для использования LLM)
+  <input id="openai_api_key" type="password" placeholder="sk‑…" />
+</label>
+<label id="label_provider">Провайдер
+  <select id="provider">
+    <option value="openai" selected>OpenAI</option>
+    <option value="azure">Azure</option>
+    <option value="anthropic">Anthropic</option>
+    <option value="mistral">Mistral</option>
+  </select>
+</label>
+<button id="enhance_btn">Улучшить формулу</button>
 
-    <button id="enhance_btn">Enhance formula</button>
+<pre id="enhance_result" class="hidden">
+<strong>Предлагаемое название:</strong> <span id="enhance_title"></span>
 
-    <pre id="enhance_result"></pre>
-  </section>
+<strong>Неочевидные признаки:</strong> <span id="non_obvious"></span>
 
-  <!-- Link to the main script to handle translation and API calls -->
-  <script src="main.js"></script>
+<strong>Обоснование патентоспособности:</strong>
+<p id="justification"></p>
+</pre>
+
+<script src="main.js"></script>
 </body>
 </html>
