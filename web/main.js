@@ -1,10 +1,12 @@
 // Base URL of the API.  If deployed on HuggingFace, adjust accordingly.
-const API_BASE = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
+const API_BASE   = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
 const API_FORMULA = `${API_BASE}/formula`;
 const API_ANALYZE = `${API_BASE}/analyze`;
 const API_ENHANCE = `${API_BASE}/enhance`;
 
 // Translation strings for UI.  Russian (ru) and English (en)
+// Added style_compact and style_detailed keys so that the formula style
+// drop-down options are translated correctly when the language changes.
 const translations = {
   ru: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -12,7 +14,7 @@ const translations = {
     label_known: "Известные признаки",
     label_distinct: "Отличительные признаки",
     label_effect: "Эффект (технический результат)",
-    label_language: "Язык формулы (Formula language)",
+    label_language: "Язык формулы",
     label_style: "Стиль формулы",
     label_variants: "Количество вариантов (оставьте пустым для одного варианта)",
     btn_generate: "Сгенерировать формулу",
@@ -26,6 +28,21 @@ const translations = {
     label_provider: "Провайдер",
     btn_enhance: "Улучшить формулу",
     no_contradictions: "Противоречия не обнаружены",
+    field_title: "Название",
+    field_formula: "Формула",
+    field_keywords: "Ключевые слова",
+    field_ipc: "IPC‑коды",
+    field_triz: "TRIZ‑функции",
+    field_contradictions: "Противоречия",
+    field_proposed_title: "Предлагаемое название",
+    field_non_obvious: "Неочевидные признаки",
+    field_justification: "Обоснование патентоспособности",
+    error_fill_required: "Заполните как минимум «Название» и «Эффект»",
+    error_enter_description: "Введите описание изобретения для анализа",
+    error_enter_formula: "Введите формулу для улучшения",
+    // Formula style labels in Russian
+    style_compact: "компактный (без повторений)",
+    style_detailed: "подробный (с повторениями)",
   },
   en: {
     h1: "TRIZ‑AI Patent Assistant",
@@ -47,9 +64,54 @@ const translations = {
     label_provider: "Provider",
     btn_enhance: "Enhance formula",
     no_contradictions: "No contradictions found",
+    field_title: "Name",
+    field_formula: "Formula",
+    field_keywords: "Keywords",
+    field_ipc: "IPC codes",
+    field_triz: "TRIZ functions",
+    field_contradictions: "Contradictions",
+    field_proposed_title: "Proposed title",
+    field_non_obvious: "Non‑obvious features",
+    field_justification: "Patentability justification",
+    error_fill_required: "Please fill in at least the \"Name\" and \"Effect\" fields",
+    error_enter_description: "Enter the invention description for analysis",
+    error_enter_formula: "Enter a formula for enhancement",
+    // Formula style labels in English
+    style_compact: "compact (no repetition)",
+    style_detailed: "detailed (with repetition)",
   },
 };
 
+// Mapping of Russian connecting phrases to their bolded Russian
+// or English equivalents. Used to replace phrases in generated formulas
+// depending on the selected language. For Russian, the phrases are wrapped
+// in <b> tags; for English, they are translated and wrapped in <b> tags.
+const connectorPhrases = {
+  ru: {
+    "включающий": "<b>включающий</b>",
+    "отличающийся тем, что": "<b>отличающийся тем, что</b>",
+    "обеспечивает": "<b>обеспечивает</b>",
+  },
+  en: {
+    "включающий": "<b>including</b>",
+    "отличающийся тем, что": "<b>characterized in that</b>",
+    "обеспечивает": "<b>provides</b>",
+  },
+};
+
+// Replace connector phrases in a formula string and return formatted HTML.
+function formatFormulaText(text, lang) {
+  let result = text || "";
+  const dict = connectorPhrases[lang] || connectorPhrases.ru;
+  Object.keys(dict).forEach((phrase) => {
+    // Use global replacement to replace all occurrences.
+    const re = new RegExp(phrase, 'g');
+    result = result.replace(re, dict[phrase]);
+  });
+  return result;
+}
+
+// Set all UI text to the appropriate language when the language selector changes.
 function updateLanguageUI() {
   const lang = document.getElementById("language").value;
   const t = translations[lang] || translations.ru;
@@ -80,11 +142,48 @@ function updateLanguageUI() {
   document.getElementById("analyze_text").placeholder = lang === "en" ? "Describe the invention for analysis…" : "Опишите изобретение для анализа…";
   document.getElementById("enhance_formula").placeholder = lang === "en" ? "Enter the formula for enhancement…" : "Введите формулу для улучшения…";
   document.getElementById("openai_api_key").placeholder = lang === "en" ? "sk‑…" : "sk‑…";
+  // Update style option labels so the drop-down values reflect the selected language.
+  const styleSelect = document.getElementById("style");
+  if (styleSelect && styleSelect.options.length >= 2) {
+    styleSelect.options[0].textContent = t.style_compact;
+    styleSelect.options[1].textContent = t.style_detailed;
+  }
+  // Update result section labels (Название, Формула) if result is visible
+  const resultPre = document.getElementById("result");
+  if (resultPre) {
+    const resultStrong = resultPre.querySelectorAll("strong");
+    if (resultStrong && resultStrong.length >= 2) {
+      resultStrong[0].textContent = t.field_title + ":";
+      resultStrong[1].textContent = t.field_formula + ":";
+    }
+  }
+  // Update analysis section labels if they exist
+  const analyzePre = document.getElementById("analyze_result");
+  if (analyzePre) {
+    const analyzeLabels = analyzePre.querySelectorAll("strong");
+    if (analyzeLabels && analyzeLabels.length >= 4) {
+      analyzeLabels[0].textContent = t.field_keywords + ":";
+      analyzeLabels[1].textContent = t.field_ipc + ":";
+      analyzeLabels[2].textContent = t.field_triz + ":";
+      analyzeLabels[3].textContent = t.field_contradictions + ":";
+    }
+  }
+  // Update enhancement section labels if they exist
+  const enhancePre = document.getElementById("enhance_result");
+  if (enhancePre) {
+    const enhanceLabels = enhancePre.querySelectorAll("strong");
+    if (enhanceLabels && enhanceLabels.length >= 3) {
+      enhanceLabels[0].textContent = t.field_proposed_title + ":";
+      enhanceLabels[1].textContent = t.field_non_obvious + ":";
+      enhanceLabels[2].textContent = t.field_justification + ":";
+    }
+  }
 }
 
-// Update UI on language change
+// Re-render language-dependent UI whenever the language select changes.
 document.getElementById("language").addEventListener("change", updateLanguageUI);
 
+// Generate a patent formula using the backend API
 async function generate() {
   const title    = document.getElementById("title").value.trim();
   const known    = document.getElementById("known").value.trim();
@@ -93,48 +192,55 @@ async function generate() {
   const style    = document.getElementById("style").value;
   const variants = document.getElementById("variants").value;
   const language = document.getElementById("language").value;
-
+  // Validate required fields
   if (!title || !effect) {
-    alert("Заполните как минимум «Название» и «Эффект»");
+    const t = translations[language] || translations.ru;
+    alert(t.error_fill_required);
     return;
   }
   // Build request body with optional variants
   const payload = { title, known, distinct, effect, style, language };
   if (variants) payload.variants = Number(variants);
-
   const resp = await fetch(API_FORMULA, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
     body: JSON.stringify(payload),
   });
-
   if (!resp.ok) {
     alert(`Ошибка API: ${resp.status}`);
     return;
   }
-
   const data = await resp.json();
   const formula = data.formula;
   const formulaEl = document.getElementById("formula");
-  // If multiple variants returned, join them with line breaks
+  // Format the returned formulas: replace connector phrases and bold them.
   if (Array.isArray(formula)) {
-    formulaEl.textContent = formula.join("\n\n");
+    const formatted = formula.map((f) => formatFormulaText(f, language));
+    formulaEl.innerHTML = formatted.join("<br/><br/>");
   } else {
-    formulaEl.textContent = formula;
+    formulaEl.innerHTML = formatFormulaText(formula, language);
   }
   document.getElementById("f_title").textContent = title;
   document.getElementById("result").classList.remove("hidden");
 }
 
+// Analyze a given invention description using the backend API
 async function analyze() {
   const text        = document.getElementById("analyze_text").value.trim();
   const maxKwInput  = document.getElementById("max_keywords").value;
   const max_keywords = maxKwInput ? Number(maxKwInput) : undefined;
+  const lang = document.getElementById("language").value;
   if (!text) {
-    alert("Введите описание изобретения для анализа");
+    const t = translations[lang] || translations.ru;
+    alert(t.error_enter_description);
     return;
   }
   const payload = { text };
+  // Include language hint for English analysis.  The backend can infer Russian automatically,
+  // but for English we explicitly pass the language code to ensure IPC/TRIZ detection works.
+  if (lang === "en") {
+    payload.language = "en";
+  }
   if (max_keywords) payload.max_keywords = max_keywords;
   const resp = await fetch(API_ANALYZE, {
     method: "POST",
@@ -159,19 +265,25 @@ async function analyze() {
     });
   } else {
     const li = document.createElement("li");
-    const lang = document.getElementById("language").value;
-    li.textContent = translations[lang].no_contradictions;
+    const t = translations[lang] || translations.ru;
+    li.textContent = t.no_contradictions;
     contradictionsList.appendChild(li);
   }
   document.getElementById("analyze_result").classList.remove("hidden");
+
+  // After displaying analysis results, update labels according to the selected language
+  updateLanguageUI();
 }
 
+// Enhance an existing patent formula using the backend API
 async function enhance() {
   const formula = document.getElementById("enhance_formula").value.trim();
   const openai_api_key = document.getElementById("openai_api_key").value.trim();
   const provider = document.getElementById("provider").value;
+  const lang = document.getElementById("language").value;
   if (!formula) {
-    alert("Введите формулу для улучшения");
+    const t = translations[lang] || translations.ru;
+    alert(t.error_enter_formula);
     return;
   }
   const payload = { formula, provider };
@@ -192,10 +304,10 @@ async function enhance() {
   document.getElementById("enhance_result").classList.remove("hidden");
 }
 
-// Attach event listeners
+// Attach event listeners for user actions
 document.getElementById("btn").onclick = generate;
 document.getElementById("analyze_btn").onclick = analyze;
 document.getElementById("enhance_btn").onclick = enhance;
 
-// Initialise UI language on page load
+// Initialise UI on page load
 updateLanguageUI();
