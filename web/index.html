@@ -4,8 +4,8 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>TRIZ‑AI Patent Assistant</title>
-  <!-- Use absolute path so that the stylesheet is resolved correctly on GitHub Pages. -->
-  <link rel="stylesheet" href="/triz-ai-patent-assistant/docs/web/style.css" />
+  <!-- Use relative path so that the stylesheet resolves whether the site is served from root or docs folder. -->
+  <link rel="stylesheet" href="../docs/web/style.css" />
 </head>
 <body>
   <h1>TRIZ‑AI Patent Assistant</h1>
@@ -71,7 +71,7 @@
   </section>
   <!-- Use relative path to the main script in docs/web so that both
        directories share the same logic -->
-  <!-- Use absolute path for the main script.  Relative paths may not resolve on GitHub Pages. -->
-  <script src="/triz-ai-patent-assistant/docs/web/main.js"></script>
+  <!-- Use relative path for the main script.  This works when GitHub Pages serves the project root. -->
+  <script src="../docs/web/main.js"></script>
 </body>
 </html>
