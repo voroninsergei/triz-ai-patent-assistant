@@ -1,10 +1,7 @@
-// Base URL of the API.
-// NOTE: Hugging Face Spaces serve the application at a domain that
-// uses a double hyphen (`--`) between the username and space name.
-// For example, a space hosted at `voroninsergei/triz-ai-patent-assistant-api`
-// will be reachable at `voroninsergei--triz-ai-patent-assistant-api.hf.space`.
-// The extra hyphen is critical; without it the domain does not resolve.
-const API_BASE   = "https://voroninsergei--triz-ai-patent-assistant-api.hf.space";
+// Base URL of the API.  Hugging Face Spaces expose apps at
+// `<username>-<space-name>.hf.space` (with a single hyphen).
+// Do not use a double hyphen here, otherwise requests will fail.
+const API_BASE   = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
 const API_FORMULA = `${API_BASE}/formula`;
 const API_ANALYZE = `${API_BASE}/analyze`;
 const API_ENHANCE = `${API_BASE}/enhance`;

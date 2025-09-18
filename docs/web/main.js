@@ -1,6 +1,7 @@
 // Base URL of the API.
-// See comment in the root web/main.js for explanation.
-const API_BASE   = "https://voroninsergei--triz-ai-patent-assistant-api.hf.space";
+// See comment in the root web/main.js for explanation: use a single hyphen
+// between username and space name.
+const API_BASE   = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
 const API_FORMULA = `${API_BASE}/formula`;
 const API_ANALYZE = `${API_BASE}/analyze`;
 const API_ENHANCE = `${API_BASE}/enhance`;
