@@ -1,5 +1,6 @@
-// Base URL of the API.  If deployed on HuggingFace, adjust accordingly.
-const API_BASE   = "https://voroninsergei-triz-ai-patent-assistant-api.hf.space";
+// Base URL of the API.
+// See comment in the root web/main.js for explanation.
+const API_BASE   = "https://voroninsergei--triz-ai-patent-assistant-api.hf.space";
 const API_FORMULA = `${API_BASE}/formula`;
 const API_ANALYZE = `${API_BASE}/analyze`;
 const API_ENHANCE = `${API_BASE}/enhance`;
