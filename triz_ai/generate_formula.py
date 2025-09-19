@@ -142,6 +142,19 @@ _EN_SYNGRAPH = None  # type: ignore
 _RU_SYN_DICT: Dict[str, _List[str]] = {}
 _EN_SYN_DICT: Dict[str, _List[str]] = {}
 
+# Custom fallback synonyms for Russian.  These entries ensure that common
+# technical terms found in patent claims have at least one alternative.  The
+# keys are in lowercase; values are lists of lowercase synonyms.  If the
+# external synonym graph or dictionary does not contain a given word, these
+# entries are used as a last resort.
+_CUSTOM_RU_SYNONYMS: Dict[str, _List[str]] = {
+    'радиатор': ['маслорадиатор', 'охладитель', 'теплообменник'],
+    'вентилятор': ['воздуходув', 'кулер'],
+    'контроллер': ['регулятор', 'управляющее устройство'],
+    'тепловые': ['теплообменные', 'теплоотводящие'],
+    'трубки': ['каналы', 'трубопроводы'],
+}
+
 # Attempt to import the graph‑based Russian synonyms.  If this fails (for
 # example, due to a missing ``networkx`` dependency), fall back to a
 # dictionary built from the ``ru_synonyms/_data/synonyms.adjlist`` file.
@@ -273,6 +286,9 @@ def _replace_first_word_with_synonym(phrase: str, variant_index: int, lang: str)
                 # Fallback to dictionary‑based synonyms (case‑insensitive)
                 orig_lower = original.lower()
                 syns = list(_RU_SYN_DICT.get(orig_lower, []))
+                # If no synonyms found in dictionary, check custom synonyms
+                if not syns:
+                    syns = list(_CUSTOM_RU_SYNONYMS.get(orig_lower, []))
                 # Preserve capitalisation of the original word
                 if syns and original and original[0].isupper():
                     syns = [s.capitalize() if s else s for s in syns]
