@@ -153,6 +153,12 @@ except Exception:
         from pathlib import Path
         synonyms_path = Path(__file__).resolve().parent.parent / 'ru_synonyms' / '_data' / 'synonyms.adjlist'
         if synonyms_path.exists():
+            # Build a case‑insensitive dictionary of synonyms.  Both keys and
+            # values are normalised to lowercase so that lookups are not
+            # sensitive to capitalisation.  We keep the relationships
+            # bidirectional: if A is a synonym of B, then B is also a synonym
+            # of A.  This fallback is used when the ru_synonyms package or
+            # networkx is unavailable.
             temp_ru: Dict[str, set] = {}
             with synonyms_path.open('r', encoding='utf-8') as f:
                 for line in f:
@@ -160,9 +166,15 @@ except Exception:
                     if not tokens:
                         continue
                     head, *syns = tokens
+                    # Normalise the head word to lowercase
+                    head_lower = head.strip().lower()
                     for syn in syns:
-                        temp_ru.setdefault(head, set()).add(syn)
-                        temp_ru.setdefault(syn, set()).add(head)
+                        syn_lower = syn.strip().lower()
+                        if not syn_lower:
+                            continue
+                        # Add both directions: head->syn and syn->head
+                        temp_ru.setdefault(head_lower, set()).add(syn_lower)
+                        temp_ru.setdefault(syn_lower, set()).add(head_lower)
             _RU_SYN_DICT = {k: sorted(v) for k, v in temp_ru.items()}
     except Exception:
         _RU_SYN_DICT = {}
@@ -248,18 +260,22 @@ def _replace_first_word_with_synonym(phrase: str, variant_index: int, lang: str)
     words = phrase.split()
     if not words:
         return phrase
-    original = words[0]
-    syns: _List[str] = []
-    if lang == 'ru':
-        # Use graph‑based synonyms if available
-        if _RU_SYNGRAPH is not None:
-            try:
-                syns = list(_RU_SYNGRAPH.get_synonyms(original))  # type: ignore[attr-defined]
-            except Exception:
-                syns = []
-        else:
-            # Fallback to dictionary‑based synonyms
-            syns = list(_RU_SYN_DICT.get(original, []))
+        original = words[0]
+        syns: _List[str] = []
+        if lang == 'ru':
+            # Use graph‑based synonyms if available
+            if _RU_SYNGRAPH is not None:
+                try:
+                    syns = list(_RU_SYNGRAPH.get_synonyms(original))  # type: ignore[attr-defined]
+                except Exception:
+                    syns = []
+            else:
+                # Fallback to dictionary‑based synonyms (case‑insensitive)
+                orig_lower = original.lower()
+                syns = list(_RU_SYN_DICT.get(orig_lower, []))
+                # Preserve capitalisation of the original word
+                if syns and original and original[0].isupper():
+                    syns = [s.capitalize() if s else s for s in syns]
     elif lang == 'en':
         # Prefer offline English synonyms graph if available
         if _EN_SYNGRAPH is not None:
