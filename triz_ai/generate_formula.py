@@ -273,25 +273,25 @@ def _replace_first_word_with_synonym(phrase: str, variant_index: int, lang: str)
     words = phrase.split()
     if not words:
         return phrase
-        original = words[0]
-        syns: _List[str] = []
-        if lang == 'ru':
-            # Use graph‑based synonyms if available
-            if _RU_SYNGRAPH is not None:
-                try:
-                    syns = list(_RU_SYNGRAPH.get_synonyms(original))  # type: ignore[attr-defined]
-                except Exception:
-                    syns = []
-            else:
-                # Fallback to dictionary‑based synonyms (case‑insensitive)
-                orig_lower = original.lower()
-                syns = list(_RU_SYN_DICT.get(orig_lower, []))
-                # If no synonyms found in dictionary, check custom synonyms
-                if not syns:
-                    syns = list(_CUSTOM_RU_SYNONYMS.get(orig_lower, []))
-                # Preserve capitalisation of the original word
-                if syns and original and original[0].isupper():
-                    syns = [s.capitalize() if s else s for s in syns]
+    original = words[0]
+    syns: _List[str] = []
+    if lang == 'ru':
+        # Use graph‑based synonyms if available
+        if _RU_SYNGRAPH is not None:
+            try:
+                syns = list(_RU_SYNGRAPH.get_synonyms(original))  # type: ignore[attr-defined]
+            except Exception:
+                syns = []
+        else:
+            # Fallback to dictionary‑based synonyms (case‑insensitive)
+            orig_lower = original.lower()
+            syns = list(_RU_SYN_DICT.get(orig_lower, []))
+            # If no synonyms found in dictionary, check custom synonyms
+            if not syns:
+                syns = list(_CUSTOM_RU_SYNONYMS.get(orig_lower, []))
+            # Preserve capitalisation of the original word
+            if syns and original and original[0].isupper():
+                syns = [s.capitalize() if s else s for s in syns]
     elif lang == 'en':
         # Prefer offline English synonyms graph if available
         if _EN_SYNGRAPH is not None:
